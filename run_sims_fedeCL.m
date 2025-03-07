@@ -187,3 +187,6 @@ hold on
 plot(testsids{1, 1}.t, testsids{1, 1}.opti.thetaddFF, 'DisplayName', 'flight data', 'Color', 'black')
 hold off
 ylabel('$\ddot{\theta} [rad/s]$', 'Interpreter','latex')
+
+
+saveas(gcf, 'figures/CL_model.png')
