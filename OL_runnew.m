@@ -1,6 +1,15 @@
 clc; clearvars;
 
-% Try using closed loop control, i don't have any access to the  
+% Running open loop after Karàsek email 
+
+% load('torqueCoupling.mat', 'experiment102');
+
+% load in the experiment with 15 deg of pitch
+
+
+%% organise the input to the model
+% model takes time and pitch paparazzi command, after Matej's consultation
+% pitch_cmd should be multiplied by 96
 
 load BAL15_set.mat;
 
@@ -10,20 +19,23 @@ time = testsids{1, 1}.t;
 
 
 % Organise input data
-for i= 1:numel(testsids)
+for i= 1:numel(1)
     current_struct = testsids{i};
     t_data = current_struct.t';
-    pitch_data = current_struct.onboard.thetacmd';
+    pitch_data = (current_struct.onboard.pitchcmdF).';
     eval(['input' num2str(i) '_data = Simulink.SimulationData.Dataset();'])
-    eval(['input' num2str(i) '_data = input' num2str(i) '_data.addElement([t_data pitch_data],''sp_pitch'');']);
+    eval(['input' num2str(i) '_data = input' num2str(i) '_data.addElement([t_data pitch_data],''paparazzi'');']);
     
     % Save data file in Simulink dataset object
     save(['temp/input' num2str(i) '_temp'], ['input' num2str(i) '_data'])
 
 end
 
+% from Robin's paper onboard and optitrack data should be put together with
+% an extended kalman filter! I won't implement it now as I think it might
+% just bring to errors.
 
-
+% define start time of the model, and introduce constant f0 command
 if numel(testsids{1}.opti.thetaF) > 0
     earliestsetpointstarttime = 9999999;
     earliestendtime = 9999999;
@@ -70,7 +82,7 @@ dataarray = input1_data.get(1);
 stoptime = dataarray(end,1);
 assignin('base','pars', testpars);
 
-simOut = sim( 'CL_fullnonlin_prevval_ucorr', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
+simOut = sim( 'OL_fullnonlin_prevval_ucorr', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
 
 yout = get(simOut,'yout');
 
@@ -89,8 +101,8 @@ try
     sims.(['sim' num2str(i)]).w_s.Data = yout.get(4).Values.Data;
     sims.(['sim' num2str(i)]).w_s.Time = yout.get(4).Values.Time;
     
-    sims.(['sim' num2str(i)]).rp_s.Data = yout.get(5).Values.Data;
-    sims.(['sim' num2str(i)]).rp_s.Time = yout.get(5).Values.Time;
+    sims.(['sim' num2str(i)]).thetadd.Data = yout.get(5).Values.Data;
+    sims.(['sim' num2str(i)]).thetadd.Time = yout.get(5).Values.Time;
 
     sims.(['sim' num2str(i)]).p_s.Data = yout.get(6).Values.Data;
     sims.(['sim' num2str(i)]).p_s.Time = yout.get(6).Values.Time;
@@ -106,18 +118,6 @@ try
 
     sims.(['sim' num2str(i)]).pdd_s.Data = yout.get(10).Values.Data;
     sims.(['sim' num2str(i)]).pdd_s.Time = yout.get(10).Values.Time;
-
-    sims.(['sim' num2str(i)]).PPRZ_s.Data = yout.get(11).Values.Data;
-    sims.(['sim' num2str(i)]).PPRZ_s.Time = yout.get(11).Values.Time;
-    
-    sims.(['sim' num2str(i)]).sp_s.Data = yout.get(14).Values.Data;
-    sims.(['sim' num2str(i)]).sp_s.Time = yout.get(14).Values.Time;
-    
-    sims.(['sim' num2str(i)]).lp_s.Data = yout.get(15).Values.Data;
-    sims.(['sim' num2str(i)]).lp_s.Time = yout.get(15).Values.Time;
-    
-    sims.(['sim' num2str(i)]).lpd_s.Data = yout.get(16).Values.Data;
-    sims.(['sim' num2str(i)]).lpd_s.Time = yout.get(16).Values.Time;
 catch
     sims.(['sim' num2str(i)]).ud_s.Data = yout.signals(1).values;
     sims.(['sim' num2str(i)]).ud_s.Time = yout.time;
@@ -132,8 +132,8 @@ catch
     sims.(['sim' num2str(i)]).w_s.Time = yout.time;
     
     
-    sims.(['sim' num2str(i)]).rp_s.Data = yout.signals(5).values;
-    sims.(['sim' num2str(i)]).rp_s.Time = yout.time;
+    sims.(['sim' num2str(i)]).thetadd.Data = yout.signals(5).values;
+    sims.(['sim' num2str(i)]).thetadd.Time = yout.time;
 
     sims.(['sim' num2str(i)]).p_s.Data = yout.signals(6).values;
     sims.(['sim' num2str(i)]).p_s.Time = yout.time;
@@ -150,17 +150,6 @@ catch
     sims.(['sim' num2str(i)]).pdd_s.Data = yout.signals(10).values;
     sims.(['sim' num2str(i)]).pdd_s.Time = yout.time;
 
-    sims.(['sim' num2str(i)]).PPRZ_s.Data = yout.signals(11).values;
-    sims.(['sim' num2str(i)]).PPRZ_s.Time = yout.time;
-    
-    sims.(['sim' num2str(i)]).sp_s.Data = yout.signals(14).values;
-    sims.(['sim' num2str(i)]).sp_s.Time = yout.time;
-    
-    sims.(['sim' num2str(i)]).lp_s.Data = yout.signals(15).values;
-    sims.(['sim' num2str(i)]).lp_s.Time = yout.time;
-    
-    sims.(['sim' num2str(i)]).lpd_s.Data = yout.signals(16).values;
-    sims.(['sim' num2str(i)]).lpd_s.Time = yout.time;
 end
 % save('output/outputdata', 'sims')
 
@@ -172,7 +161,7 @@ hold on
 plot(time, actual, 'DisplayName', 'flight data',  'Color', 'black')
 hold off
 ylabel('$\dot{u} [m/s^2]$', 'Interpreter','latex')
-
+ylim([-2.5 2.5])
 legend
 
 nexttile
@@ -181,13 +170,11 @@ hold on
 plot(testsids{1, 1}.t, testsids{1, 1}.opti.wdFF, 'DisplayName', 'flight data', 'Color', 'black')
 hold off
 ylabel('$\dot{w} [m/s^2]$', 'Interpreter','latex')
+ylim([-0.7 2])
 
 nexttile
-plot(sims.sim0.pdd_s.Time, sims.sim0.pdd_s.Data, 'DisplayName', 'model', 'LineStyle','--', 'Color', 'red')
+plot(sims.sim0.thetadd.Time, sims.sim0.thetadd.Data, 'DisplayName', 'model', 'LineStyle','--', 'Color', 'red')
 hold on
 plot(testsids{1, 1}.t, testsids{1, 1}.opti.thetaddFF, 'DisplayName', 'flight data', 'Color', 'black')
 hold off
 ylabel('$\ddot{\theta} [rad/s]$', 'Interpreter','latex')
-
-
-saveas(gcf, 'figures/CL_model.png')

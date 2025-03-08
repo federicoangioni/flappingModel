@@ -1,16 +1,8 @@
 clc, clearvars
-%{ 
-TO-DO
-modify the struct to insert the start time:
-homogenized_w?
-%}
-
-
-
 
 % using minimal longitudinal model data from the science paper;
 
-load('flight_data_torque_couplingSciencePaper.mat', 'experiment102');
+load('torqueCoupling.mat', 'experiment102');
 
 data = experiment102;
 
@@ -42,7 +34,7 @@ thetad = data.motion_tracking.OMy_avg;
 theta = data.motion_tracking.PITCH_avg;
 
 
-pprz_cmd = data.onboard.angles_commands_setpoints.CMDpitch_filtered{2, 1}; % to fix
+pprz_cmd = data.onboard.angles_commands_setpoints.CMDpitch_filtered{2, 1} * 96 ; % to fix
 freq_R = data.onboard.frequency.FREQright_wing{2, 1}/60; % to fix
 const_f0 = mean(freq_R, 'all');
 
