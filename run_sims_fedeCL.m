@@ -2,7 +2,7 @@ clc; clearvars;
 
 % Try using closed loop control, i don't have any access to the  
 
-load BAL15_set.mat;
+load data/BAL15_set.mat;
 
 % for comparison with model output
 actual = testsids{1, 1}.opti.udFF;
@@ -22,7 +22,7 @@ for i= 1:numel(testsids)
 
 end
 
-
+plot(time, testsids{1}.onboard.pitchcmd)
 
 if numel(testsids{1}.opti.thetaF) > 0
     earliestsetpointstarttime = 9999999;
