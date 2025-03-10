@@ -28,8 +28,8 @@ time = testsids{1}.t';
 % Filter now with a 4th order butterworth 5Hz cut-off to remove noise
 % due to flapping
 
-fs = 200; %Hz
-fc = 2; % Hz
+fs = 360; %Hz
+fc = 5; % Hz
 
 order = 4;
 
@@ -55,9 +55,8 @@ earliesttime = testsids{i}.t(earliestind);
 
 testsids{1}.setpointstarttime = earliesttime;
 
-meancounter = 0;
-testpars.f0 = 17;
-testpars.w0 = 0;
+
+
 
 cell_input = {'input_data.getElement(1)'};
 
@@ -66,9 +65,14 @@ stoptime = dataarray(end,1);
 assignin('base','pars', testpars);
 % parameters from paper
 
-
+pars.I = 1.26e-4;
+pars.lz = 0.035;
+pars.ucorr = 10;
+pars.f0 = 16.4164;
+pars.m = 29.4e-3;
 
 pars.f0 = testpars.f0;
+pars.w0 =  0.1217;
 
 cd('models')
 simOut = sim( 'models/OL_fullnonlin_prevval_ucorr.slx', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
@@ -87,26 +91,35 @@ sim_thetadd_t = simOut.yout{5}.Values.Time;
 sim_wd = simOut.yout{3}.Values.Data;
 sim_wd_time = simOut.yout{3}.Values.Time;
 
-t = tiledlayout(3, 1);
+t = tiledlayout(4, 1);
 
 nexttile
 title('OL with new data minimal longitudinal')
-plot(sim_ud_time, sim_ud, DisplayName= 'model'); hold on;
+plot(sim_ud_time, sim_ud, DisplayName= 'model', LineStyle='--'); hold on;
 plot(time, optitrack.udFF, DisplayName= 'data')
 ylabel('$\dot{u} \quad [m/s]$', Interpreter='latex')
-
+xlim([0 2.5])
+ylim([-5 5])
 legend()
 
 nexttile
 
-plot(sim_wd_time, sim_wd, DisplayName= 'model'); hold on;
+plot(sim_wd_time, sim_wd, DisplayName= 'model', LineStyle='--'); hold on;
 plot(time, optitrack.wdFF, DisplayName= 'data')
 ylabel('$\dot{w} \quad [m/s]$', Interpreter='latex')
-
+xlim([0 2.5])
+ylim([-5 5])
 nexttile
-plot(sim_thetadd_t, sim_thetadd, DisplayName= 'model'); hold on;
+plot(sim_thetadd_t, sim_thetadd, DisplayName= 'model', LineStyle='--'); hold on;
 plot(time, optitrack.thetaddFF, DisplayName='Data')
-ylabel('$\ddot{\theta} \quad [?]$', Interpreter='latex')
+ylabel('$\ddot{\theta} \quad [rad/s]$', Interpreter='latex')
+ylim([-20 20])
+xlim([0 2.5])
+nexttile
 
-title(t, 'OL configuration with new autopilot and new data')
-saveas(gcf, 'figures/OL_model_newdata.png')
+plot(input_data{1}(:, 1), pprz_filt)
+ylabel('$ PPRZ \: cmd \: [\%] $', Interpreter='latex')
+
+title(t, 'OL configuration Pitch Maneuver 15 deg')
+saveas(gcf, 'figures/OL_model_newdata.svg')
+

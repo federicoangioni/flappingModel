@@ -22,7 +22,6 @@ for i= 1:numel(testsids)
 
 end
 
-plot(time, testsids{1}.onboard.pitchcmd)
 
 if numel(testsids{1}.opti.thetaF) > 0
     earliestsetpointstarttime = 9999999;
@@ -62,7 +61,7 @@ if numel(testsids{1}.opti.thetaF) > 0
     testpars.f0 = (0.5*testpars.m*testpars.g - testpars.c2 - testpars.bz*mean_w(1))/testpars.c1;
     testpars.w0 = mean_w(1);
 end
-
+testpars
 
 cell_input = {'input1_data.getElement(1)'};
 input1_data
@@ -190,4 +189,4 @@ hold off
 ylabel('$\ddot{\theta} [rad/s]$', 'Interpreter','latex')
 
 
-saveas(gcf, 'figures/CL_model.png')
+% saveas(gcf, 'figures/CL_model.png')
