@@ -69,7 +69,9 @@ dataarray = input1_data.get(1);
 stoptime = dataarray(end,1);
 assignin('base','pars', testpars);
 
+cd('models')
 simOut = sim('CL_fullnonlin_prevval_ucorr', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
+cd('..')
 
 yout = get(simOut,'yout');
 
