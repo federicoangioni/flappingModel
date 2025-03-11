@@ -2,9 +2,8 @@ clc; clearvars;
 
 % Try using closed loop control, i don't have any access to the  
 
-load data/BAL15_set.mat;
+load BAL15_set.mat;
 
-% for comparison with model output
 actual = testsids{1, 1}.opti.udFF;
 time = testsids{1, 1}.t;
 
@@ -21,6 +20,7 @@ for i= 1:numel(testsids)
     save(['temp/input' num2str(i) '_temp'], ['input' num2str(i) '_data'])
 
 end
+
 
 
 if numel(testsids{1}.opti.thetaF) > 0
@@ -61,15 +61,15 @@ if numel(testsids{1}.opti.thetaF) > 0
     testpars.f0 = (0.5*testpars.m*testpars.g - testpars.c2 - testpars.bz*mean_w(1))/testpars.c1;
     testpars.w0 = mean_w(1);
 end
-testpars
+
 
 cell_input = {'input1_data.getElement(1)'};
-input1_data
+
 dataarray = input1_data.get(1);
 stoptime = dataarray(end,1);
 assignin('base','pars', testpars);
 
-simOut = sim( 'CL_fullnonlin_prevval_ucorr', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
+simOut = sim('CL_fullnonlin_prevval_ucorr', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
 
 yout = get(simOut,'yout');
 
@@ -187,6 +187,3 @@ hold on
 plot(testsids{1, 1}.t, testsids{1, 1}.opti.thetaddFF, 'DisplayName', 'flight data', 'Color', 'black')
 hold off
 ylabel('$\ddot{\theta} [rad/s]$', 'Interpreter','latex')
-
-
-% saveas(gcf, 'figures/CL_model.png')
