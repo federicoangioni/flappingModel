@@ -74,9 +74,9 @@ pars.m = 29.4e-3;
 pars.f0 = testpars.f0;
 pars.w0 =  0.1217;
 
-
+cd('models')
 simOut = sim( 'OL_fullnonlin_prevval_ucorr.slx', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
-
+cd('..')
 
 yout = get(simOut,'yout');
 
