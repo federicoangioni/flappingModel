@@ -12,11 +12,7 @@ i = 1;
 % model takes time and pitch paparazzi command, after Matej's consultation
 % pitch_cmd should be multiplied by 96
 
-<<<<<<< HEAD
-load BAL15_set.mat;
-=======
 load data/BAL15_set.mat;
->>>>>>> main
 
 onboard = testsids{1}.onboard;
 optitrack = testsids{1}.opti;
@@ -24,11 +20,7 @@ optitrack = testsids{1}.opti;
 % set pitch is in degrees
 
 sp_pitch = (onboard.thetacmd)*180/pi;
-<<<<<<< HEAD
-pprz_pitch = onboard.pitchcmdF'*96;
-=======
 pprz_pitch = onboard.pitchcmdF';
->>>>>>> main
 
 time = testsids{1}.t';
 
@@ -82,15 +74,9 @@ pars.m = 29.4e-3;
 pars.f0 = testpars.f0;
 pars.w0 =  0.1217;
 
-<<<<<<< HEAD
 
 simOut = sim( 'OL_fullnonlin_prevval_ucorr.slx', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
 
-=======
-cd('models')
-simOut = sim( 'models/OL_fullnonlin_prevval_ucorr.slx', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
-cd('..');
->>>>>>> main
 
 yout = get(simOut,'yout');
 
@@ -135,9 +121,5 @@ plot(input_data{1}(:, 1), pprz_filt)
 ylabel('$ PPRZ \: cmd \: [\%] $', Interpreter='latex')
 
 title(t, 'OL configuration Pitch Maneuver 15 deg')
-<<<<<<< HEAD
 saveas(gcf, 'figures/OL_model_newdata.png')
-=======
-saveas(gcf, 'figures/OL_model_newdata.svg')
->>>>>>> main
 
