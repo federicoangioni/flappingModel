@@ -56,8 +56,6 @@ earliesttime = testsids{i}.t(earliestind);
 testsids{1}.setpointstarttime = earliesttime;
 
 
-
-
 cell_input = {'input_data.getElement(1)'};
 
 dataarray = input_data.get(1);
@@ -75,51 +73,138 @@ pars.f0 = testpars.f0;
 pars.w0 =  0.1217;
 
 cd('models')
-simOut = sim( 'OL_fullnonlin_prevval_ucorr.slx', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
+simOut = sim('OL_fullnonlin_prevval_ucorr.slx', 'ExternalInput', cell_input{1}, 'LoadExternalInput', 'on','StopTime',num2str(stoptime),'timeout',30);
 cd('..')
 
 yout = get(simOut,'yout');
 
-% simout
+%% Collect data from simulation
 
+% Accelerations:
+% u dot
 sim_ud = simOut.yout{1}.Values.Data;
-sim_ud_time = simOut.yout{1}.Values.Time;
+sim_ud_t = simOut.yout{1}.Values.Time;
 
+% w dot
+sim_wd = simOut.yout{3}.Values.Data;
+sim_wd_t = simOut.yout{3}.Values.Time;
+
+% theta double dot
 sim_thetadd = simOut.yout{5}.Values.Data;
 sim_thetadd_t = simOut.yout{5}.Values.Time;
 
-sim_wd = simOut.yout{3}.Values.Data;
-sim_wd_time = simOut.yout{3}.Values.Time;
+% Velocities:
+% u
+sim_u = simOut.yout{2}.Values.Data;
+sim_u_t = simOut.yout{2}.Values.Time;
 
+% w
+sim_w = simOut.yout{4}.Values.Data;
+sim_w_t = simOut.yout{4}.Values.Time;
+
+% thetad
+sim_thetad = simOut.yout{6}.Values.Data;
+sim_thetad_t = simOut.yout{6}.Values.Time;
+
+% Pitch angle theta
+sim_theta = simOut.yout{7}.Values.Data;
+sim_theta_t = simOut.yout{7}.Values.Time;
+
+% Dihedral angle
+sim_dih = simOut.yout{8}.Values.Data;
+sim_dih_t = simOut.yout{8}.Values.Time;
+
+%% Plot
+% Define common x limit
+limitx = stoptime;
+
+% First plot accelerations and command input
+figure(Name= "Accelerations and input")
 t = tiledlayout(4, 1);
+title(t, 'Open Loop $\theta = 15 \deg$, accelerations', Interpreter='Latex')
 
-nexttile
-title('OL with new data minimal longitudinal')
-plot(sim_ud_time, sim_ud, DisplayName= 'model', LineStyle='--'); hold on;
-plot(time, optitrack.udFF, DisplayName= 'data')
-ylabel('$\dot{u} \quad [m/s]$', Interpreter='latex')
-xlim([0 2.5])
-ylim([-5 5])
-legend()
+nexttile()
+plot(sim_ud_t, sim_ud, DisplayName= 'model', LineStyle='--'); hold on;
+plot(time, optitrack.udFF, DisplayName= 'data');
+ylabel('$\dot{u} \; [m/s]$', Interpreter='latex');
+legend();
 
-nexttile
+xlim([0 limitx]);
+ylim([-5 5]);
 
-plot(sim_wd_time, sim_wd, DisplayName= 'model', LineStyle='--'); hold on;
-plot(time, optitrack.wdFF, DisplayName= 'data')
-ylabel('$\dot{w} \quad [m/s]$', Interpreter='latex')
-xlim([0 2.5])
-ylim([-5 5])
-nexttile
+nexttile();
+plot(sim_wd_t, sim_wd, DisplayName= 'model', LineStyle='--'); hold on;
+plot(time, optitrack.wdFF, DisplayName= 'data');
+ylabel('$\dot{w} \; [m/s]$', Interpreter='latex');
+
+xlim([0 limitx]);
+ylim([-5 5]);
+
+nexttile();
 plot(sim_thetadd_t, sim_thetadd, DisplayName= 'model', LineStyle='--'); hold on;
-plot(time, optitrack.thetaddFF, DisplayName='Data')
-ylabel('$\ddot{\theta} \quad [rad/s]$', Interpreter='latex')
-ylim([-20 20])
-xlim([0 2.5])
-nexttile
+plot(time, optitrack.thetaddFF, DisplayName='Data');
+ylabel('$\ddot{\theta} \; [rad/s]$', Interpreter='latex');
 
-plot(input_data{1}(:, 1), pprz_filt)
-ylabel('$ PPRZ \: cmd \: [\%] $', Interpreter='latex')
+xlim([0 limitx]);
+ylim([-20 20]);
 
-title(t, 'OL configuration Pitch Maneuver 15 deg')
-saveas(gcf, 'figures/OL_model_newdata.png')
 
+nexttile()
+plot(input_data{1}(:, 1), pprz_filt);
+ylabel('$ PPRZ \: cmd \: [\% \cdot 96] $', Interpreter='latex');
+xlabel('$Time [s]$', Interpreter='latex');
+xlim([0 limitx]);
+
+saveas(gcf, 'figures/openLoop_accelerations_input.png')
+
+figure(Name= "Velocities and Angular Velocity");
+t = tiledlayout(3, 1);
+title(t, 'Open Loop $\theta = 15 \deg$, velocities', Interpreter='Latex');
+
+nexttile()
+plot(sim_u_t, sim_u, DisplayName= 'model', LineStyle='--'); hold on;
+plot(time, optitrack.uFF, DisplayName='Data');
+ylabel('$u \; [m/s]$', Interpreter='latex');
+
+xlim([0 limitx]);
+
+nexttile();
+plot(sim_w_t, sim_w, DisplayName= 'model', LineStyle='--'); hold on;
+plot(time, optitrack.wFF, DisplayName= 'Data');
+ylabel('$w \; [m/s]$', Interpreter='latex');
+
+xlim([0 limitx]);
+
+nexttile();
+plot(sim_thetad_t, sim_thetad, DisplayName= 'model', LineStyle='--'); hold on;
+plot(time, optitrack.thetadFF, DisplayName= 'Data');
+ylabel('$\dot{\theta} \; [\deg/s]$', Interpreter='latex');
+xlabel('$Time [s]$', Interpreter='latex');
+xlim([0 limitx]);
+legend()
+saveas(gcf, 'figures/openLoop_velocities.png')
+
+
+figure(Name= "Pitch angle, frequency and dihedral angle");
+t = tiledlayout(3, 1);
+title(t, 'Open Loop $\theta = 15 \deg$, various', Interpreter='Latex');
+
+nexttile();
+plot(sim_theta_t, sim_theta, DisplayName= 'model', LineStyle='--'); hold on;
+plot(time, onboard.thetaF, DisplayName= 'Data')
+ylabel('$\theta \; [\deg/s]$', Interpreter='latex');
+xlabel('$Time [s]$', Interpreter='latex');
+xlim([0 limitx]);
+
+nexttile();
+plot(time, onboard.ff/60);
+ylabel("$f \; [Hz]$", Interpreter="latex");
+xlim([0 limitx]);
+
+nexttile()
+plot(sim_dih_t, sim_dih, DisplayName= 'model', Linestyle= '--'); hold on;
+ylabel("$\Gamma [rad]$", Interpreter= 'latex')
+xlim([0 limitx]);
+xlabel("$Time [s]$", Interpreter= "latex");
+legend();
+saveas(gcf, 'figures/openLoop_various.png')
