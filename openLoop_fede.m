@@ -7,46 +7,51 @@ load data\BAL15_set.mat;
 % Opti has both velocities and angles
 % onboard has only angles and commands
 
-optitrack = testsids{1, 1}.opti;
-onboard = testsids{1, 1}.onboard;
+optitrack = testsids{1}.opti;
+onboard = testsids{1}.onboard;
 
 
-pprz_cmd = onboard.pitchcmd';
-time = testsids{1, 1}.t';
+pprz_pitch = onboard.pitchcmd'*96;
+
+time = testsids{1}.t';
 
 %% Specify inputs to model
 
 %% Inputs
 % prepare input data to be processed by the model
 input_data = Simulink.SimulationData.Dataset();
-input_data = input_data.addElement([time pprz_cmd], 'PPRZ_CMD');
+input_data = input_data.addElement([time pprz_pitch], 'PPRZ_CMD');
 
 %% Specify model parameters
 
-para.m = 29.4e-3;
+para.m = 0.0294;
 
-para.Iyy = 1.00e-4;
+para.Iyy = 1.26e-4;
 
-para.bx = 4.21e-3;
+para.bx = 0.0722;
 
-para.bz = 9.16e-4;
+para.bz = 0.0157;
 
-para.lw = 81e-3;
+para.lw = 0.081;
 
-para.lz = 11e-3;
+para.lz = 0.0271;
 
 para.omega = 40;
 
 para.chi = 0.634;
 
-para.ucorr = 0.175;
+para.ucorr = 10;
 
 para.c1 = 0.0114;
 
 para.c2 = -0.0449;
 
-para.f = 16.4164;
+para.f = 16.584013596491230;
 
+para.w0 = 0.1217;
+
+para.I = 1.26e-4;
+% watch out different lz initial conditions lead to very different results
 %% Set start time
 
 earliestsetpointstarttime = 9999999;
@@ -139,7 +144,7 @@ ylim([-20 20]);
 
 
 nexttile()
-plot(input_data{1}(:, 1), pprz_cmd);
+plot(input_data{1}(:, 1), pprz_pitch);
 ylabel('$ PPRZ \: cmd \: [\% \cdot 96] $', Interpreter='latex');
 xlabel('$Time [s]$', Interpreter='latex');
 xlim([0 limitx]);
