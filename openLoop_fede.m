@@ -16,11 +16,19 @@ pprz_pitch = onboard.pitchcmd'*96;
 time = testsids{1}.t';
 
 %% Specify inputs to model
+fs = 360; %Hz
+fc = 5; % Hz
+
+order = 4;
+
+[b, a] = butter(order, fc/(fs/2), 'low'); 
+
+pprz_filt = filtfilt(b, a, pprz_pitch);
 
 %% Inputs
 % prepare input data to be processed by the model
 input_data = Simulink.SimulationData.Dataset();
-input_data = input_data.addElement([time pprz_pitch], 'PPRZ_CMD');
+input_data = input_data.addElement([time pprz_filt], 'PPRZ_CMD');
 
 %% Specify model parameters
 
