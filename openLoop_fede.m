@@ -34,11 +34,12 @@ input_data = input_data.addElement([time pprz_filt], 'PPRZ_CMD');
 
 para.m = 0.0294;
 
-para.Iyy = 1.26e-4;
+para.Iyy = 1.70e-4;
 
+% these b values are already multiplied by f0 apparently
 para.bx = 0.0722;
 
-para.bz = 0.0157;
+para.bz = 0.02;
 
 para.lw = 0.081;
 
@@ -142,6 +143,7 @@ ylabel('$\dot{w} \; [m/s]$', Interpreter='latex');
 xlim([0 limitx]);
 ylim([-5 5]);
 
+
 nexttile();
 plot(sim_thetadd_t, sim_thetadd, DisplayName= 'model', LineStyle='--'); hold on;
 plot(time, optitrack.thetaddFF, DisplayName='Data');
@@ -158,7 +160,7 @@ xlabel('$Time [s]$', Interpreter='latex');
 xlim([0 limitx]);
 
 
-
+saveas(gcf, 'figures/new_openLoop_accelerations_input.png')
 figure(Name= "Velocities and Angular Velocity");
 t = tiledlayout(3, 1);
 title(t, 'Open Loop $\theta = 15 \deg$, velocities', Interpreter='Latex');
@@ -184,7 +186,7 @@ ylabel('$\dot{\theta} \; [\deg/s]$', Interpreter='latex');
 xlabel('$Time [s]$', Interpreter='latex');
 xlim([0 limitx]);
 legend()
-
+saveas(gcf, 'figures/new_openLoop_velocities.png')
 
 
 figure(Name= "Pitch angle, frequency and dihedral angle");
@@ -203,3 +205,4 @@ plot(time, onboard.ff/60);
 ylabel("$f \; [Hz]$", Interpreter="latex");
 xlim([0 limitx]);
 
+saveas(gcf, 'figures/new_openLoop_various.png')
