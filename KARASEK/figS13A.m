@@ -1,0 +1,53 @@
+close all
+clear all
+
+Nexp=1;
+nman=1;
+
+m=29.85e-3; % complete setup, with markers, standing gear and a battery
+g=9.81;
+
+addpath('support_files')
+load dataset_revision.mat
+eval(['data=experiment' num2str(Nexp) ';']);
+
+assign_variables
+
+% Body forces - ground fixed frame
+XX=m*acc_CG_E_x;
+YY=m*acc_CG_E_y;
+ZZ=m*acc_CG_E_z;
+
+FF_E=[XX; YY; ZZ];
+
+%% Supplement - roll flip sequence generation
+
+index=1:length(time);
+man_start=index(time==0); % sample number when time=0
+TS=-0.7;
+TF=1.3;
+
+fps=1/median(diff(time));
+
+anim_start=round((TS)*fps)+man_start;
+
+anim_lims=[-0.5 0.5 -0.2 5.2 -0.1 0.9] ;
+
+anim_options={'COG',[0;0;-0.06], ...
+              'anim_start',anim_start, ...
+              'anim_step',45, ...
+              'anim_length',16*45, ...
+              'anim_view','front', ...
+              'anim_traces','on', ...
+              'anim_scale',1, ...
+              'anim_detail','off', ...
+              'anim_delfly','on', ...
+              'anim_control','on', ...
+              'anim_force','on', ...
+              'anim_moment','off', ...
+              'anim_speed','on', ...
+              'anim_align','on', ...
+              'anim_lims',anim_lims    }; 
+
+transformer_sequence(posX,-posY,-posZ,roll,-pitch,-yaw,cmd_hingeL_interp,cmd_hingeR_interp,cmd_motorL_interp,cmd_motorR_interp,cmd_yaw_interp,FF_E,zeros(size(FF_E)),vel_CG_E,time,m,anim_options)
+

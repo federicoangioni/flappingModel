@@ -23,7 +23,7 @@ order = 4;
 
 [b, a] = butter(order, fc/(fs/2), 'low'); 
 
-pprz_filt = filtfilt(b, a, pprz_pitch);
+pprz_filt = filtfilt(b, a, pprz_pitch) - 385*0;
 
 %% Inputs
 % prepare input data to be processed by the model
@@ -37,7 +37,7 @@ para.m = 0.0294;
 para.Iyy = 1.70e-4;
 
 % these b values are already multiplied by f0 apparently
-para.bx = 0.0722;
+para.bx = 0.14722;
 
 para.bz = 0.02;
 
@@ -57,9 +57,13 @@ para.c2 = -0.0449;
 
 para.f = 16.584013596491230;
 
-para.w0 = 0.1217;
+para.w0 = 0.217;
 
 para.I = 1.26e-4;
+
+para.u0 = optitrack.uFF(1);
+para.thetadd0 = 0;
+para.thetad0 = -0.0521;
 % watch out different lz initial conditions lead to very different results
 %% Set start time
 
@@ -116,14 +120,21 @@ sim_thetad_t = simOut.yout{4}.Values.Time;
 sim_theta = simOut.yout{3}.Values.Data;
 sim_theta_t = simOut.yout{3}.Values.Time;
 
+% ld
+sim_ld = simOut.yout{8}.Values.Data;
+sim_ld_t = simOut.yout{8}.Values.Time;
+
+% dih angle
+sim_dih = simOut.yout{9}.Values.Data;
+sim_dih_t = simOut.yout{9}.Values.Time;
 
 %% Plot
 % Define common x limit
 limitx = stoptime;
 
 % First plot accelerations and command input
-figure(Name= "Accelerations and input")
-t = tiledlayout(4, 1);
+%figure(Name= "Accelerations and input")
+t = tiledlayout(3, 3);
 title(t, 'Open Loop $\theta = 15 \deg$, accelerations', Interpreter='Latex')
 
 nexttile()
@@ -154,16 +165,14 @@ ylim([-20 20]);
 
 
 nexttile()
-plot(input_data{1}(:, 1), pprz_pitch);
+% plot(input_data{1}(:, 1), pprz_filt);
+plot(sim_ld_t, sim_ld);
+yline(0);
 ylabel('$ PPRZ \: cmd \: [\% \cdot 96] $', Interpreter='latex');
 xlabel('$Time [s]$', Interpreter='latex');
 xlim([0 limitx]);
 
 
-saveas(gcf, 'figures/new_openLoop_accelerations_input.png')
-figure(Name= "Velocities and Angular Velocity");
-t = tiledlayout(3, 1);
-title(t, 'Open Loop $\theta = 15 \deg$, velocities', Interpreter='Latex');
 
 nexttile()
 plot(sim_u_t, sim_u, DisplayName= 'model', LineStyle='--'); hold on;
@@ -185,24 +194,20 @@ plot(time, optitrack.thetadFF, DisplayName= 'Data');
 ylabel('$\dot{\theta} \; [\deg/s]$', Interpreter='latex');
 xlabel('$Time [s]$', Interpreter='latex');
 xlim([0 limitx]);
-legend()
-saveas(gcf, 'figures/new_openLoop_velocities.png')
 
-
-figure(Name= "Pitch angle, frequency and dihedral angle");
-t = tiledlayout(3, 1);
-title(t, 'Open Loop $\theta = 15 \deg$, various', Interpreter='Latex');
 
 nexttile();
 plot(sim_theta_t, sim_theta, DisplayName= 'model', LineStyle='--'); hold on;
-plot(time, onboard.thetaF, DisplayName= 'Data')
+plot(time, onboard.theta, DisplayName= 'Data')
 ylabel('$\theta \; [\deg/s]$', Interpreter='latex');
 xlabel('$Time [s]$', Interpreter='latex');
 xlim([0 limitx]);
 
 nexttile();
-plot(time, onboard.ff/60);
-ylabel("$f \; [Hz]$", Interpreter="latex");
+% dihedral angle after transfer
+plot(sim_dih_t, sim_dih);
+yline(0);
+ylabel("dihedral angle after transfer", Interpreter="latex");
 xlim([0 limitx]);
 
-saveas(gcf, 'figures/new_openLoop_various.png')
+% saveas(gcf, 'figures/new_openLoop_various.png')

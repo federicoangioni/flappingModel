@@ -1,0 +1,141 @@
+close all
+clear all
+clc
+
+addpath('force_balance_data')
+load force_balance_coupling_data.mat
+     
+%% results - maps
+figure('pos',[10 110 350 250])
+surf(roll,pitch,MxAvg)
+shading('interp')
+colormap('plasma')
+xlabel('roll cmd (%)')
+ylabel('pitch cmd (%)')
+zlabel('Mx (Nmm)')
+title('roll torque (Nmm)')
+colorbar
+caxis([-4.5 4.5])
+view([0,0,1])
+axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+set(gca,'Xtick',[-20:10:20])
+set(gca,'Ytick',[-80:40:80])
+
+figure('pos',[10 110 350 250]) 
+surf(roll,pitch,MyAvg)
+shading('interp')
+colormap('plasma')
+xlabel('roll cmd (%)')
+ylabel('pitch cmd (%)')
+zlabel('My (Nmm)')
+title('pitch torque (Nmm)')
+colorbar
+caxis([-4.5 4.5])
+view([0,0,1])
+axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+set(gca,'Xtick',[-20:10:20])
+set(gca,'Ytick',[-80:40:80])
+
+figure('pos',[10 110 350 250]) 
+surf(roll,pitch,MzAvg)
+shading('interp')
+colormap('plasma')
+xlabel('roll cmd (%)')
+ylabel('pitch cmd (%)')
+zlabel('Mz (Nmm)')
+title('yaw torque (Nmm)')
+colorbar
+caxis([-4.5 4.5])
+view([0,0,1])
+axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+set(gca,'Xtick',[-20:10:20])
+set(gca,'Ytick',[-80:40:80])
+
+% figure('pos',[10 110 350 250]) 
+% surf(roll,pitch,FxAvg)
+% shading('interp')
+% colormap('plasma')
+% xlabel('roll cmd (%)')
+% ylabel('pitch cmd (%)')
+% zlabel('Fx (N)')
+% title('longitudinal force (N)')
+% colorbar
+% view([0,0,1])
+% axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+% set(gca,'Xtick',[-20:10:20])
+% set(gca,'Ytick',[-80:40:80])
+
+% figure('pos',[10 110 350 250]) 
+% surf(roll,pitch,FyAvg)
+% shading('interp')
+% colormap('plasma')
+% xlabel('roll cmd (%)')
+% ylabel('pitch cmd (%)')
+% zlabel('Fy (N)')
+% title('lateral force (N)')
+% colorbar
+% view([0,0,1])
+% axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+% set(gca,'Xtick',[-20:10:20])
+% set(gca,'Ytick',[-80:40:80])
+
+
+figure('pos',[10 110 350 250]) 
+surf(roll,pitch,-FzAvg)
+shading('interp')
+colormap('plasma')
+xlabel('roll cmd (%)')
+ylabel('pitch cmd (%)')
+zlabel('Fz (N)')
+title('thrust (N)')
+colorbar
+view([0,0,1])
+axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+set(gca,'Xtick',[-20:10:20])
+set(gca,'Ytick',[-80:40:80])
+
+% figure('pos',[10 110 350 250]) 
+% surf(roll,pitch,UAvg.*IAvg)
+% shading('interp')
+% colormap('plasma')
+% xlabel('roll cmd (%)')
+% ylabel('pitch cmd (%)')
+% zlabel('power (W)')
+% title('input power (W)')
+% colorbar
+% view([0,0,1])
+% axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+% set(gca,'Xtick',[-20:10:20])
+% set(gca,'Ytick',[-80:40:80])
+
+figure('pos',[10 110 350 250]) 
+surf(roll,pitch,(UAvg.*IAvg-UAvg(3,3)*IAvg(3,3))/(UAvg(3,3)*IAvg(3,3))*100)
+shading('interp')
+colormap('viridis')
+xlabel('roll cmd (%)')
+ylabel('pitch cmd (%)')
+% zlabel('Power (W)')
+title(['\Delta from nominal power ' num2str(UAvg(3,3).*IAvg(3,3)) ' W (%)'])
+colorbar
+caxis([-5.5 5.5])
+view([0,0,1])
+axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+set(gca,'Xtick',[-20:10:20])
+set(gca,'Ytick',[-80:40:80])
+
+
+figure('pos',[10 110 350 250]) 
+surf(roll,pitch,-(FzAvg-FzAvg(3,3))/FzAvg(3,3)*100)
+shading('interp')
+colormap('viridis')
+xlabel('roll cmd (%)')
+ylabel('pitch cmd (%)')
+% zlabel('Thrust (N)')
+title(['\Delta from nominal thrust ' num2str(-FzAvg(3,3)) ' N (%)'])
+colorbar
+caxis([-5.5 5.5])
+view([0,0,1])
+axis([min(roll(:,1)) max(roll(:,1)) min(pitch(1,:)) max(pitch(1,:))])
+set(gca,'Xtick',[-20:10:20])
+set(gca,'Ytick',[-80:40:80])
+
