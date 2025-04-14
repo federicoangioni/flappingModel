@@ -71,6 +71,8 @@ thetad_est = gradient(theta_smooth) / dt;
 f_thetad = griddedInterpolant(TIME, thetad_est, "spline", "linear");
 
 
+
+
 ud_odefunc = @(t, u, bx, lz) -sin(f_theta(t))*g -  bx/m*(u - lz * f_thetad(t) + f_ldd(t));
 
 
