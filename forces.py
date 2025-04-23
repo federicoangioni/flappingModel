@@ -7,7 +7,7 @@ from scipy.signal import TransferFunction, lsim
 
 # %% Define constants
 g = 9.81
-bx = 0.0722 # 4.21e-3 in paper
+bx = 4.21e-3 # in paper
 lz = 80.1e-3
 m = 29.6e-3
 lw = 81e-3
@@ -42,7 +42,7 @@ CMDRight = data.onboard_interpolated.CMDthrottle_interp[nman]/4.1
 accx = data.motion_tracking.DVEL_BODYx_filtered[nman]
 accz = data.motion_tracking.DVEL_BODYz_filtered[nman]
 velx = data.motion_tracking.VEL_BODYx_filtered[nman]
-
+velz = data.motion_tracking.VEL_BODYz_filtered[nman]
 # TODO: figure out the setpoints
 
 # Onboard time
@@ -56,7 +56,7 @@ CMD_dihed =np.radians(data.onboard_interpolated.CMDpitch_interp[nman]/100*18)
 # %% Necessary to the model
 
 pitch = np.radians(data.motion_tracking.PITCH[nman])
-velx = data.motion_tracking.VEL_BODYx_filtered[nman]
+omy = np.radians(data.motion_tracking.OMy_filtered[nman])
 
 # %% Butterworth filter
 fs = 1/np.mean(np.diff(time))
@@ -88,10 +88,16 @@ t_dih, y_dih, _ = lsim(system, U=CMD_dihed, T=time)
 
 # correction on dihedral due to velocity
 dih_corr = -c_corr*velx + y_dih
+# %% Force modeling
+ld = lw*np.sin(dih_corr)
+ldd = np.gradient(ld)
+
+fx = -np.sin(pitch)*g - y_ff * bx / m * (velx - lz*omy + ldd) - omy*velz
 
 # %% Plotting
 plt.subplot(5, 1, 1)
 plt.plot(time, accx)
+plt.plot(time, fx)
 plt.ylabel(r'$\dot{u}$ [m/$s^2$]')
 plt.xlim(0.5, 3.5)
 plt.ylim(-20, 20)
