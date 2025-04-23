@@ -3,6 +3,7 @@ import scipy
 from scipy.signal import butter, filtfilt
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+from scipy.signal import TransferFunction, lsim
 
 # %% Define constants
 g = 9.81
@@ -25,6 +26,9 @@ data = mat[experiment_key]
 # %% Extract necessary flight data
 # Optitrack time
 time = data.motion_tracking.TIME
+time -=time[0]
+
+print(time[0])
 thetadd_opti = np.radians(data.motion_tracking.ALPHy[nman])
 thetadd_onboard = data.onboard.rates.ALPHy_IMU_filtered[nman]
 time_onboard_rates = data.onboard.rates.TIME_onboard_rates[nman]
@@ -33,7 +37,7 @@ time_onboard_rates = data.onboard.rates.TIME_onboard_rates[nman]
 ff = data.onboard_interpolated.FREQright_wing_interp[nman]
 freq_right = data.onboard.frequency.FREQright_wing[nman]
 time_freq = data.onboard.frequency.TIME_onboard_freq[nman]
-CMDRight = data.onboard_interpolated.CMDright_motor_interp[nman]
+CMDRight = data.onboard_interpolated.CMDthrottle_interp[nman]
 # CMDRight = data.onboard.angles_commands_setpoints.CMDthrottle_filtered[nman]
 
 # Accelerations, TODO what is actually DVEL?
@@ -66,36 +70,46 @@ accx = filtfilt(b, a, accx)
 thetadd_onboard = filtfilt(b, a, thetadd_onboard)
 thetadd_opti = filtfilt(b, a, thetadd_opti)
 
+# %% FRequency transfer function 
+tau = 0.0796
+K = 1.0
+numerator = [K]
+denominator = [tau, 1]
+system = TransferFunction(numerator, denominator)
+t_ff, y_ff, _ = lsim(system, U=CMDRight/4.1, T=time)
+
 
 # %% Plotting
 plt.subplot(5, 1, 1)
 plt.plot(time, accx)
 plt.ylabel(r'$\dot{u}$ [m/$s^2$]')
-plt.xlim(-1.5, 2.5)
+plt.xlim(0.5, 3.5)
 plt.ylim(-20, 20)
 
 plt.subplot(5, 1, 2)
 plt.plot(time, accz)
-plt.xlim(-1.5, 2.5)
+plt.xlim(0.5, 3.5)
 plt.ylim(-10, 30)
 plt.ylabel(r'$\dot{w}$ [m/$s^2$]')
 
 plt.subplot(5, 1, 3)
 plt.plot(time, thetadd_opti)
 plt.ylabel(r'$\ddot{\theta}$ [rad/s$^2$]')
-plt.xlim(-1.5, 2.5)
+plt.xlim(0.5, 3.5)
 plt.ylim(-100, 100)
 
 plt.subplot(5, 1, 4)
 plt.plot(time, dihedral)
 plt.ylabel(r'$\gamma_2 [deg]$')
-plt.xlim(-1.5, 2.5)
+plt.xlim(0.5, 3.5)
 
 plt.subplot(5, 1, 5)
-plt.plot(time, ff)
-plt.plot(time, CMDRight/60)
+plt.plot(time, ff, linewidth=1.0, label='Flight data')
+plt.plot(t_ff, y_ff, linestyle='--', color='black', label='Simulation')
+plt.plot(time, CMDRight/4.1, color= 'darkkhaki', linestyle='--', label='Setpoint')
 plt.ylabel(r'f [Hz]')
-plt.xlim(-1.5, 2.5)
+plt.xlim(0.5, 3.5)
+plt.ylim(5.0, 27)
 
 plt.tight_layout()
 plt.show()
