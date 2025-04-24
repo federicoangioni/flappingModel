@@ -105,7 +105,7 @@ my = (-bx*ff * lz*(velx - lz*omy + ldd) + bz*y_ff*ld*(velz- ld*omy) - T(ff)*ld)/
 
 # %% Plotting
 
-fig, axs = plt.subplots(5, 1)
+fig, axs = plt.subplots(5, 1, figsize= (12, 8))
 
 
 axs[0].plot(time, accx)
@@ -153,7 +153,11 @@ axs[4].set_xlim(0.5, 3.5)
 axs[4].set_ylim(5.0, 27)
 axs[4].spines['top'].set_visible(False)
 axs[4].spines['right'].set_visible(False)
+axs[4].legend(loc='upper left', bbox_to_anchor=(0.2, 0.75), fontsize = 12)
 
 fig.align_ylabels(axs[:])
 plt.tight_layout()
+
+plt.suptitle('360deg pitch flip maneuver: using flight data to simulate accelerations')
+plt.savefig('360deg pitch maneuver.png')
 plt.show()
