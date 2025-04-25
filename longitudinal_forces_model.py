@@ -21,7 +21,7 @@ bz = 9.16e-4
 # %% Extract data from mat files
 Nexp=2
 nman=0
-
+title = '360deg_pitch_maneuver.png'
 # Figure 15 of Minimal Longitudinal uses experiment2, run 0
 # checked up to 79
 # 4, 13(?), 36 (almost sure), 54, 55(2, 4), 57(1)
@@ -64,6 +64,7 @@ pitch = interp1d(time_onboard, pitch_raw, fill_value='extrapolate')(time)
 omy_raw = np.radians(data.onboard.rates.OMy_IMU_filtered[nman])
 omy = interp1d(time_onboard_rates, omy_raw, fill_value='extrapolate')(time)
 
+# Secondary inputs
 # pitch = np.radians(data.motion_tracking.PITCH[nman])
 # omy = np.radians(data.motion_tracking.OMy_filtered[nman])
 # plt.plot(time, omy)
@@ -107,13 +108,13 @@ ld = lw*np.sin(dih_corr)
 ldd = np.gradient(ld, time)
 
 T = lambda f: 2*(c1*f + c2)
-fx = -np.sin(pitch)*g - ff * bx / m * (velx - lz*omy + ldd) - omy*velz
-fz = np.cos(pitch)*g - ff * bz / m * (velz - ld*omy) + omy*velx - T(ff)/m
-my = (-bx*ff * lz*(velx - lz*omy + ldd) + bz*y_ff*ld*(velz- ld*omy) - T(ff)*ld)/Iyy
+fx = -np.sin(pitch)*g - y_ff * bx / m * (velx - lz*omy + ldd) - omy*velz
+fz = np.cos(pitch)*g - y_ff * bz / m * (velz - ld*omy) + omy*velx - T(y_ff)/m
+my = (-bx*y_ff * lz*(velx - lz*omy + ldd) + bz*y_ff*ld*(velz- ld*omy) - T(y_ff)*ld)/Iyy
 
-# %% Plotting
+# %% Plotting forces estimation
 
-fig, axs = plt.subplots(5, 1, figsize= (12, 8))
+fig, axs = plt.subplots(5, 1, figsize= (8, 6))
 
 axs[0].plot(time, accx)
 axs[0].plot(time, fx, linestyle='--', color= 'black')
@@ -160,11 +161,34 @@ axs[4].set_xlim(0.5, 3.5)
 axs[4].set_ylim(5.0, 27)
 axs[4].spines['top'].set_visible(False)
 axs[4].spines['right'].set_visible(False)
-axs[4].legend(loc='upper left', bbox_to_anchor=(0.2, 0.75), fontsize = 12)
+axs[4].legend(loc='upper left', bbox_to_anchor=(0.2, 0.8), fontsize = 8)
 
 fig.align_ylabels(axs[:])
 plt.tight_layout()
 
-plt.suptitle('360deg pitch flip maneuver: using flight data to simulate accelerations')
-plt.savefig('360deg_pitch_maneuver.png')
+plt.suptitle('Using flight data to simulate accelerations')
+# plt.savefig(title)
+plt.show()
+
+# %% Plotting components for forces estimationi
+fig, axs = plt.subplots(4, 2, figsize= (12, 4))
+
+axs[0, 0].plot(time, velx)
+
+
+
+axs[1].plot(time, velz)
+
+axs[2].plot(time, ld)
+
+
+axs[3].plot(time, ldd)
+
+
+axs[4].plot(time, omy)
+
+
+axs[5].plot(time, pitch)
+
+
 plt.show()
