@@ -21,7 +21,10 @@ bz = 9.16e-4
 # %% Extract data from mat files
 Nexp=2
 nman=0
-title = '360deg_pitch_maneuver.png'
+title_main = '360deg_pitch_maneuver_2'
+title_comp = '360deg_pitch_maneuver_components'
+save = False
+
 # Figure 15 of Minimal Longitudinal uses experiment2, run 0
 # checked up to 79
 # 4, 13(?), 36 (almost sure), 54, 55(2, 4), 57(1)
@@ -167,28 +170,61 @@ fig.align_ylabels(axs[:])
 plt.tight_layout()
 
 plt.suptitle('Using flight data to simulate accelerations')
-# plt.savefig(title)
-plt.show()
+if save:
+    plt.savefig(f'results/{title_main}.png')
 
-# %% Plotting components for forces estimationi
-fig, axs = plt.subplots(4, 2, figsize= (12, 4))
+# %% Plotting components for forces estimation
 
-axs[0, 0].plot(time, velx)
+fig, axs = plt.subplots(3, 2, figsize= (12, 4))
+
+axs[0, 0].plot(time, velx, linewidth = 1.0, label='Flight data')
+axs[0, 0].set_ylabel(r'u [m/s]')
+axs[0, 0].set_xlim(0.5, 3.5)
+axs[0, 0].spines['top'].set_visible(False)
+axs[0, 0].spines['right'].set_visible(False)
+axs[0, 0].set_xticklabels([])
+
+axs[0, 1].plot(time, velz, linewidth = 1.0, label='Flight data')
+axs[0, 1].set_ylabel(r'w [m/s]')
+axs[0, 1].set_xlim(0.5, 3.5)
+axs[0, 1].spines['top'].set_visible(False)
+axs[0, 1].spines['right'].set_visible(False)
+axs[0, 1].set_xticklabels([])
+
+axs[1, 0].plot(time, ld, linewidth = 1.0, label='Flight data')
+axs[1, 0].set_ylabel(r'$l_d$ [m]')
+axs[1, 0].set_xlim(0.5, 3.5)
+axs[1, 0].spines['top'].set_visible(False)
+axs[1, 0].spines['right'].set_visible(False)
+axs[1, 0].set_xticklabels([])
 
 
+axs[1, 1].plot(time, ldd, linewidth = 1.0, label='Flight data')
+axs[1, 1].set_ylabel(r'$l_{dd}$ [m/s]')
+axs[1, 1].set_xlim(0.5, 3.5)
+axs[1, 1].spines['top'].set_visible(False)
+axs[1, 1].spines['right'].set_visible(False)
+axs[1, 1].set_xticklabels([])
 
-axs[1].plot(time, velz)
+axs[2, 0].plot(time, pitch, linewidth = 1.0, label='Flight data')
+axs[2, 0].set_ylabel(r'$\theta$ [rad]')
+axs[2, 0].set_xlim(0.5, 3.5)
+axs[2, 0].set_xlabel(r'Time [s]')
+axs[2, 0].spines['top'].set_visible(False)
+axs[2, 0].spines['right'].set_visible(False)
 
-axs[2].plot(time, ld)
+axs[2, 1].plot(time, omy, linewidth = 1.0, label='Flight data')
+axs[2, 1].set_ylabel(r'$\dot{\theta}$ [rad/s]')
+axs[2, 1].set_xlabel(r'Time [s]')
+axs[2, 1].set_xlim(0.5, 3.5)
+axs[2, 1].spines['top'].set_visible(False)
+axs[2, 1].spines['right'].set_visible(False)
+axs[2, 1].legend(fontsize = 8)
 
+fig.align_ylabels(axs[:])
+plt.suptitle('Dynamic components for longitudinal model')
 
-axs[3].plot(time, ldd)
-
-
-axs[4].plot(time, omy)
-
-
-axs[5].plot(time, pitch)
-
-
+if save:
+    plt.savefig(f'results/{title_comp}.png')
+    
 plt.show()
