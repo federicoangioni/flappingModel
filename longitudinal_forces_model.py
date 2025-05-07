@@ -115,6 +115,12 @@ fx = -np.sin(pitch)*g - y_ff * bx / m * (velx - lz*omy + ldd) - omy*velz
 fz = np.cos(pitch)*g - y_ff * bz / m * (velz - ld*omy) + omy*velx - T(y_ff)/m
 my = (-bx*y_ff * lz*(velx - lz*omy + ldd) + bz*y_ff*ld*(velz- ld*omy) - T(y_ff)*ld)/Iyy
 
+# %% REGRESSION
+
+
+
+
+
 # %% Plotting forces estimation
 
 fig, axs = plt.subplots(5, 1, figsize= (8, 6))
