@@ -1,6 +1,8 @@
 import scipy as sp
 import numpy as np
 from scipy.interpolate import interp1d
+from scipy.signal import butter, filtfilt
+from scipy.signal import TransferFunction, lsim
 
 mat = sp.io.loadmat("dataset_revision.mat", squeeze_me=True, struct_as_record=False)
 
@@ -23,7 +25,7 @@ def load_data(nexp=None):
         temp_data = dictionary[f"experiment{exp}"]
         dictionary[f"experiment{exp}"] = []
 
-        for run in range(nruns):
+        for run in range(0, 1):
             # %% Extract necessary flight data
             # Optitrack time
             time = temp_data.motion_tracking.TIME
@@ -53,6 +55,26 @@ def load_data(nexp=None):
             omy_raw = np.radians(temp_data.onboard.rates.OMy_IMU_filtered[run])
             omy = interp1d(time_onboard_rates, omy_raw, fill_value="extrapolate")(time)
 
+            # %% Process the data
+            # Butterworth filter
+            fs = 1/np.mean(np.diff(time))
+            fc = 5
+            order = 4
+
+            b, a = butter(order, fc / (fs/2))
+            accz = filtfilt(b, a, accz)
+            accx = filtfilt(b, a, accx)
+            thetadd_onboard = filtfilt(b, a, thetadd_onboard)
+            thetadd_opti = filtfilt(b, a, thetadd_opti)
+
+            # Frequency transfer function 
+            tau = 0.0796
+            K = 1.0
+            numerator = [K]
+            denominator = [tau, 1]
+            system = TransferFunction(numerator, denominator)
+            t_ff, y_ff, _ = lsim(system, U=CMDRight, T=time)
+
             data_run = {
                 "run": run,
                 "time": time,
@@ -70,6 +92,7 @@ def load_data(nexp=None):
                 "dihedral": dihedral,
                 "pitch": pitch,
                 "omy": omy,
+                "y_ff": y_ff,
             }
 
             dictionary[f"experiment{exp}"].append(data_run)
@@ -77,5 +100,22 @@ def load_data(nexp=None):
     return dictionary
 
 
-def fit_forces(data):
-    pass
+def fit_forces(data, exps):
+    velx = []
+    pitch = []
+    for exp in exps:        
+        for run in range(len(data[f"experiment{exp}"])):
+            curr_data = data[f"experiment{exp}"][run]
+            
+            curr_velx = curr_data["velx"]
+            curr_pitch = curr_data["pitch"]
+            
+            velx.extend(curr_velx)
+            pitch.extend(curr_pitch)
+    
+    return print(velx, pitch)
+        
+
+experiments = [94]
+data = load_data(experiments)
+fit_forces(data, experiments)

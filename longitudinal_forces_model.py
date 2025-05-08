@@ -19,7 +19,7 @@ lw = 81e-3
 bz = 9.16e-4
 
 # %% Extract data from mat files
-Nexp=2
+Nexp=104
 nman=0
 title_main = '360deg_pitch_maneuver_2'
 title_comp = '360deg_pitch_maneuver_components'
@@ -110,16 +110,11 @@ dt = np.mean(np.diff(time))
 ld = lw*np.sin(dih_corr)
 ldd = np.gradient(ld, time)
 
-T = lambda f: 2*(c1*f + c2)
+def T(f):
+    return 2*(c1*f + c2)
 fx = -np.sin(pitch)*g - y_ff * bx / m * (velx - lz*omy + ldd) - omy*velz
 fz = np.cos(pitch)*g - y_ff * bz / m * (velz - ld*omy) + omy*velx - T(y_ff)/m
 my = (-bx*y_ff * lz*(velx - lz*omy + ldd) + bz*y_ff*ld*(velz- ld*omy) - T(y_ff)*ld)/Iyy
-
-# %% REGRESSION
-
-
-
-
 
 # %% Plotting forces estimation
 
