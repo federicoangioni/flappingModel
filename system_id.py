@@ -6,6 +6,11 @@ from scipy.signal import TransferFunction, lsim
 
 mat = sp.io.loadmat("dataset_revision.mat", squeeze_me=True, struct_as_record=False)
 
+# Constants
+c_corr = 0.175
+g = 9.80665
+m = 29.4e-3
+lz = 27e-3
 
 def load_data(nexp=None):
     """
@@ -25,7 +30,7 @@ def load_data(nexp=None):
         temp_data = dictionary[f"experiment{exp}"]
         dictionary[f"experiment{exp}"] = []
 
-        for run in range(0, 1):
+        for run in range(nruns):
             # %% Extract necessary flight data
             # Optitrack time
             time = temp_data.motion_tracking.TIME
@@ -37,7 +42,6 @@ def load_data(nexp=None):
             # Frequency, both onboard and interpolated + setpoints
             ff = temp_data.onboard_interpolated.FREQright_wing_interp[run]
             freq_right = temp_data.onboard.frequency.FREQright_wing[run]
-            time_freq = temp_data.onboard.frequency.TIME_onboard_freq[run]
             CMDRight = temp_data.onboard_interpolated.CMDthrottle_interp[run] / 4.1
 
             # Accelerations
@@ -48,6 +52,7 @@ def load_data(nexp=None):
 
             time_onboard = temp_data.onboard.angles_commands_setpoints.TIME_onboard[run]
             dihedral = temp_data.motion_tracking.DIHEDRAL[run]
+            CMD_dihed =np.radians(temp_data.onboard_interpolated.CMDpitch_interp[run]/100*18)
             pitch_raw = np.radians(
                 temp_data.onboard.angles_commands_setpoints.PITCH_IMU[run]
             )
@@ -57,65 +62,93 @@ def load_data(nexp=None):
 
             # %% Process the data
             # Butterworth filter
-            fs = 1/np.mean(np.diff(time))
+            fs = 1 / np.mean(np.diff(time))
             fc = 5
             order = 4
 
-            b, a = butter(order, fc / (fs/2))
+            b, a = butter(order, fc / (fs / 2))
             accz = filtfilt(b, a, accz)
             accx = filtfilt(b, a, accx)
             thetadd_onboard = filtfilt(b, a, thetadd_onboard)
             thetadd_opti = filtfilt(b, a, thetadd_opti)
 
-            # Frequency transfer function 
+            # Frequency transfer function
             tau = 0.0796
             K = 1.0
             numerator = [K]
             denominator = [tau, 1]
             system = TransferFunction(numerator, denominator)
             t_ff, y_ff, _ = lsim(system, U=CMDRight, T=time)
+            
+            # Dihedral transfer function
+            act_w0 = 40  # rad/s
+            act_damp = 0.634  # -
+            numerator = [act_w0**2]
+            denominator = [1, 2 * act_damp * act_w0, act_w0**2]
 
+            system = TransferFunction(numerator, denominator)
+            t_dih, y_dih, _ = lsim(system, U=CMD_dihed, T=time)
+
+            # correction on dihedral due to velocity
+            dih_corr = -c_corr * velx + y_dih
+            
             data_run = {
-                "run": run,
+                "run": [run],
                 "time": time,
                 "thetadd_opti": thetadd_opti,
                 "thetadd_onboard": thetadd_onboard,
-                "time_onboard_rates": time_onboard_rates,
                 "ff": ff,
                 "freq_right": freq_right,
-                "time_freq": time_freq,
                 "CMDRight": CMDRight,
+                "dihedral": dihedral,
                 "accx": accx,
                 "accz": accz,
                 "velx": velx,
                 "velz": velz,
-                "dihedral": dihedral,
                 "pitch": pitch,
                 "omy": omy,
                 "y_ff": y_ff,
+                "dih_corr":dih_corr,
             }
 
             dictionary[f"experiment{exp}"].append(data_run)
-
-    return dictionary
-
-
-def fit_forces(data, exps):
-    velx = []
-    pitch = []
-    for exp in exps:        
-        for run in range(len(data[f"experiment{exp}"])):
-            curr_data = data[f"experiment{exp}"][run]
-            
-            curr_velx = curr_data["velx"]
-            curr_pitch = curr_data["pitch"]
-            
-            velx.extend(curr_velx)
-            pitch.extend(curr_pitch)
     
-    return print(velx, pitch)
-        
+    collected_data = {key: [] for key in dictionary[f"experiment{nexp[0]}"][0].keys()}
+    for exp in nexp:
+        for run in range(len(dictionary[f"experiment{exp}"])):
+            curr_data = dictionary[f"experiment{exp}"][run]
+            for key in curr_data.keys():
+                collected_data[key].extend(curr_data[key])
 
-experiments = [94]
+    for key in collected_data.keys():
+        collected_data[key] = np.array(collected_data[key])
+        
+    return collected_data
+
+
+def forces_xdir(data):
+    # Extract the needed data
+    time     = data["time"]
+    pitch    = data["pitch"]
+    y_ff     = data["y_ff"]
+    velx     = data["velx"]
+    dih_corr = data["dih_corr"]
+    omy      = data["omy"]
+    velz     = data["velz"]
+    accx     = data["accx"]
+    
+    ld = np.sin(dih_corr)
+    ldd = np.gradient(ld, time)
+    
+    b = accx + omy * velz + np.sin(pitch) * g
+    
+    a1 = y_ff / m * (lz * omy - velx)
+    a2 = - y_ff * ldd / m
+    A = np.array([a1, a2, np.ones(len(a1))])
+    
+    np.linalg.lstsq(A, b)
+    
+experiments = [104, 94]
 data = load_data(experiments)
-fit_forces(data, experiments)
+
+forces_xdir(data)
