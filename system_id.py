@@ -12,6 +12,7 @@ g = 9.80665
 m = 29.4e-3
 lz = 27e-3
 
+
 def load_data(nexp=None):
     """
     nexp: list
@@ -52,7 +53,9 @@ def load_data(nexp=None):
 
             time_onboard = temp_data.onboard.angles_commands_setpoints.TIME_onboard[run]
             dihedral = temp_data.motion_tracking.DIHEDRAL[run]
-            CMD_dihed =np.radians(temp_data.onboard_interpolated.CMDpitch_interp[run]/100*18)
+            CMD_dihed = np.radians(
+                temp_data.onboard_interpolated.CMDpitch_interp[run] / 100 * 18
+            )
             pitch_raw = np.radians(
                 temp_data.onboard.angles_commands_setpoints.PITCH_IMU[run]
             )
@@ -79,7 +82,7 @@ def load_data(nexp=None):
             denominator = [tau, 1]
             system = TransferFunction(numerator, denominator)
             t_ff, y_ff, _ = lsim(system, U=CMDRight, T=time)
-            
+
             # Dihedral transfer function
             act_w0 = 40  # rad/s
             act_damp = 0.634  # -
@@ -91,7 +94,7 @@ def load_data(nexp=None):
 
             # correction on dihedral due to velocity
             dih_corr = -c_corr * velx + y_dih
-            
+
             data_run = {
                 "run": [run],
                 "time": time,
@@ -108,11 +111,11 @@ def load_data(nexp=None):
                 "pitch": pitch,
                 "omy": omy,
                 "y_ff": y_ff,
-                "dih_corr":dih_corr,
+                "dih_corr": dih_corr,
             }
 
             dictionary[f"experiment{exp}"].append(data_run)
-    
+
     collected_data = {key: [] for key in dictionary[f"experiment{nexp[0]}"][0].keys()}
     for exp in nexp:
         for run in range(len(dictionary[f"experiment{exp}"])):
@@ -122,33 +125,50 @@ def load_data(nexp=None):
 
     for key in collected_data.keys():
         collected_data[key] = np.array(collected_data[key])
-        
+
     return collected_data
 
 
 def forces_xdir(data):
     # Extract the needed data
-    time     = data["time"]
-    pitch    = data["pitch"]
-    y_ff     = data["y_ff"]
-    velx     = data["velx"]
+    time = data["time"]
+    pitch = data["pitch"]
+    y_ff = data["y_ff"]
+    velx = data["velx"]
     dih_corr = data["dih_corr"]
-    omy      = data["omy"]
-    velz     = data["velz"]
-    accx     = data["accx"]
-    
+    omy = data["omy"]
+    velz = data["velz"]
+    accx = data["accx"]
+
     ld = np.sin(dih_corr)
     ldd = np.gradient(ld, time)
-    
+
     b = accx + omy * velz + np.sin(pitch) * g
-    
+
     a1 = y_ff / m * (lz * omy - velx)
-    a2 = - y_ff * ldd / m
-    A = np.array([a1, a2, np.ones(len(a1))])
-    
-    np.linalg.lstsq(A, b)
-    
-experiments = [104, 94]
+    a2 = -y_ff * ldd / m
+    A = np.array([a1, a2]).T
+    print("------------------------------------------")
+    print("Starting regression, using np.linalg.lstsq")
+    [k1, k2], resid, rank, s = np.linalg.lstsq(A, b)
+    print("------------------Done--------------------")
+    print("                                          ")
+    print("                                          ")
+    print("                                          ")
+    print("                                          ")
+    print("                                          ")
+    print("                                          ")
+    print("------------------Results-----------------")
+    print("Visualising the results:                  ")
+    print(f"bx  = {np.round(k1, 10)}, lw*bx = {np.round(k2, 10)} ")
+    r2 = 1 - resid / sum((b - b.mean()) ** 2)
+
+    print(f"Value of R^2 = {r2}")
+
+    return [k1, k2]
+
+
+experiments = [104, 94, 2]
 data = load_data(experiments)
 
 forces_xdir(data)

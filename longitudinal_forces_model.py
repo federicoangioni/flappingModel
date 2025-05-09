@@ -19,7 +19,7 @@ lw = 81e-3
 bz = 9.16e-4
 
 # %% Extract data from mat files
-Nexp=104
+Nexp=2
 nman=0
 title_main = '360deg_pitch_maneuver_2'
 title_comp = '360deg_pitch_maneuver_components'
