@@ -14,6 +14,7 @@ lz = 27e-3
 c1 = 0.0114
 c2 = -0.0449
 
+
 def load_data(nexp=None):
     """
     nexp: list
@@ -130,6 +131,10 @@ def load_data(nexp=None):
     return collected_data
 
 
+def T(f):
+    return 2 * (c1 * f + c2)
+
+
 def forces_xdir(data, v=False):
     # Extract the needed data
     time = data["time"]
@@ -170,8 +175,6 @@ def forces_xdir(data, v=False):
 
     return [k1, k2]
 
-def T(f):
-    return 2*(c1*f + c2)
 
 def forces_zdir(data, v=False):
     # Extract the needed data
@@ -184,15 +187,15 @@ def forces_zdir(data, v=False):
     accz = data["accz"]
 
     ld = np.sin(dih_corr)
-    
+
     b = accz - np.cos(pitch) * g - omy * velx + T(y_ff) / m
 
-    a1 = - y_ff * velz / m
+    a1 = -y_ff * velz / m
     a2 = y_ff * ld * omy / m
     A = np.array([a1, a2]).T
 
     [k1, k2], resid, rank, s = np.linalg.lstsq(A, b)
-    
+
     if v:
         print("------------------------------------------")
         print("Starting regression, using np.linalg.lstsq")
@@ -205,14 +208,15 @@ def forces_zdir(data, v=False):
         print("                                          ")
         print("------------------Results-----------------")
         print("Visualising the results:                  ")
-        print(f"bz  = {np.round(k1, 10)}, lw*bz = {np.round(k2, 10)} ")
+        print(f"bz  = {np.round(k1, 10)}, lw * bz = {np.round(k2, 10)}")
         r2 = 1 - resid / sum((b - b.mean()) ** 2)
 
         print(f"Value of R^2 = {r2}")
 
     return [k1, k2]
 
+
 experiments = [104, 94, 2]
 data = load_data(experiments)
 
-forces_zdir(data)
+forces_zdir(data, v=True)
