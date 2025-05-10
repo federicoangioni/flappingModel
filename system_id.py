@@ -3,6 +3,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.signal import butter, filtfilt
 from scipy.signal import TransferFunction, lsim
+import matplotlib.pyplot as plt
 
 mat = sp.io.loadmat("dataset_revision.mat", squeeze_me=True, struct_as_record=False)
 
@@ -114,6 +115,9 @@ def load_data(nexp=None):
                 "omy": omy,
                 "y_ff": y_ff,
                 "dih_corr": dih_corr,
+                "t_dih": t_dih,
+                "CMD_dihed": CMD_dihed,
+                "t_ff": t_ff,
             }
 
             dictionary[f"experiment{exp}"].append(data_run)
@@ -135,7 +139,7 @@ def T(f):
     return 2 * (c1 * f + c2)
 
 
-def forces_xdir(data, v=False):
+def accx_regression(data, v=False):
     # Extract the needed data
     time = data["time"]
     pitch = data["pitch"]
@@ -154,11 +158,11 @@ def forces_xdir(data, v=False):
     a1 = y_ff / m * (lz * omy - velx)
     a2 = -y_ff * ldd / m
     A = np.array([a1, a2]).T
-
+    [k1_x, k2_x], resid, rank, s = np.linalg.lstsq(A, b)
+    
     if v:
         print("------------------------------------------")
         print("Starting regression, using np.linalg.lstsq")
-        [k1, k2], resid, rank, s = np.linalg.lstsq(A, b)
         print("------------------Done--------------------")
         print("                                          ")
         print("                                          ")
@@ -168,15 +172,15 @@ def forces_xdir(data, v=False):
         print("                                          ")
         print("------------------Results-----------------")
         print("Visualising the results:                  ")
-        print(f"bx  = {np.round(k1, 10)}, lw*bx = {np.round(k2, 10)} ")
+        print(f"bx  = {np.round(k1_x, 10)}, lw*bx = {np.round(k2_x, 10)} ")
         r2 = 1 - resid / sum((b - b.mean()) ** 2)
 
         print(f"Value of R^2 = {r2}")
 
-    return [k1, k2]
+    return [k1_x, k2_x]
 
 
-def forces_zdir(data, v=False):
+def accz_regression(data, v=False):
     # Extract the needed data
     pitch = data["pitch"]
     y_ff = data["y_ff"]
@@ -194,7 +198,7 @@ def forces_zdir(data, v=False):
     a2 = y_ff * ld * omy / m
     A = np.array([a1, a2]).T
 
-    [k1, k2], resid, rank, s = np.linalg.lstsq(A, b)
+    [k1_z, k2_z], resid, rank, s = np.linalg.lstsq(A, b)
 
     if v:
         print("------------------------------------------")
@@ -208,15 +212,102 @@ def forces_zdir(data, v=False):
         print("                                          ")
         print("------------------Results-----------------")
         print("Visualising the results:                  ")
-        print(f"bz  = {np.round(k1, 10)}, lw * bz = {np.round(k2, 10)}")
+        print(f"bz  = {np.round(k1_z, 10)}, lw * bz = {np.round(k2_z, 10)}")
         r2 = 1 - resid / sum((b - b.mean()) ** 2)
 
         print(f"Value of R^2 = {r2}")
 
-    return [k1, k2]
+    return [k1_z, k2_z]
 
+def plotting(data, k1_x= None, k2_x=None, k1_z= None, k2_z= None):
 
-experiments = [104, 94, 2]
+    # Extract data
+    pitch = data["pitch"]
+    y_ff = data["y_ff"]
+    velx = data["velx"]
+    dih_corr = data["dih_corr"]
+    omy = data["omy"]
+    velz = data["velz"]
+    accz = data["accz"]
+    time = data["time"]
+    y_ff = data["y_ff"]
+    dih_corr = data["dih_corr"]
+    accx = data["accx"]
+    thetadd_opti = data["thetadd_opti"]
+    dihedral = data["dihedral"]
+    t_dih = data["t_dih"]
+    CMDRight = data["CMDRight"]
+    CMD_dihed = data["CMD_dihed"]
+    t_ff = data["t_ff"]
+    ff = data["ff"]
+    
+    ld = np.sin(dih_corr)
+    ldd = np.gradient(ld, time)
+    
+    # Calculate accelerations
+    accx_model = k1_x * (y_ff / m * (lz * omy - velx)) + k2_x * (-y_ff * ldd / m) - omy * velz - np.sin(pitch) * g
+    
+    
+    
+    
+    
+    
+    fig, axs = plt.subplots(5, 1, figsize= (8, 6))
+
+    axs[0].plot(time, accx)
+    axs[0].plot(time, accx_model, linestyle='--', color= 'black')
+    axs[0].set_ylabel(r'$\dot{u}$ [m/$s^2$]')
+    axs[0].set_xlim(0.5, 3.5)
+    axs[0].set_ylim(-20, 20)
+    axs[0].spines['top'].set_visible(False)
+    axs[0].spines['right'].set_visible(False)
+    axs[0].set_xticklabels([])
+
+    axs[1].plot(time, accz)
+    # axs[1].plot(time, fz, linestyle='--', color= 'black')
+    axs[1].set_xlim(0.5, 3.5)
+    axs[1].set_ylim(-10, 35)
+    axs[1].set_ylabel(r'$\dot{w}$ [m/$s^2$]')
+    axs[1].spines['top'].set_visible(False)
+    axs[1].spines['right'].set_visible(False)
+    axs[1].set_xticklabels([])
+
+    axs[2].plot(time, thetadd_opti)
+    # axs[2].plot(time, -my, linestyle='--', color= 'black')
+    axs[2].set_ylabel(r'$\ddot{\theta}$ [rad/s$^2$]')
+    axs[2].set_xlim(0.5, 3.5)
+    axs[2].set_ylim(-100, 100)
+    axs[2].spines['top'].set_visible(False)
+    axs[2].spines['right'].set_visible(False)
+    axs[2].set_xticklabels([])
+
+    axs[3].plot(time, dihedral, linewidth=1.0, label='Flight data')
+    axs[3].plot(t_dih, np.degrees(dih_corr), linestyle='--', color= 'black', label='Simulation')
+    axs[3].plot(time, np.degrees(CMD_dihed), linestyle='--', color= 'darkkhaki', label='Setpoint')
+    axs[3].set_ylabel(r'$\gamma_2 [deg]$')
+    axs[3].set_xlim(0.5, 3.5)
+    axs[3].spines['top'].set_visible(False)
+    axs[3].spines['right'].set_visible(False)
+    axs[3].set_xticklabels([])
+
+    axs[4].plot(time, ff, linewidth=1.0, label='Flight data')
+    axs[4].plot(t_ff, y_ff, linestyle='--', color='black', label='Simulation')
+    axs[4].plot(time, CMDRight, color= 'darkkhaki', linestyle='--', label='Setpoint')
+    axs[4].set_ylabel(r'f [Hz]')
+    axs[4].set_xlabel(r'Time [s]')
+    axs[4].set_xlim(0.5, 3.5)
+    axs[4].set_ylim(5.0, 27)
+    axs[4].spines['top'].set_visible(False)
+    axs[4].spines['right'].set_visible(False)
+    axs[4].legend(loc='upper left', bbox_to_anchor=(0.2, 0.8), fontsize = 8)
+
+    fig.align_ylabels(axs[:])
+    plt.tight_layout()
+    plt.show()
+
+experiments = [104]
 data = load_data(experiments)
 
-forces_zdir(data, v=True)
+k1_x, k2_x = accz_regression(data, v=True)
+
+plotting(data, k1_x, k2_x)
