@@ -26,8 +26,8 @@ bz  = 0.0010171981, lw * bz = 0.00733434
 """
 
 # %% Extract data from mat files
-Nexp=101
-nman=4
+Nexp=102
+nman=7
 title_main = '360deg_pitch_maneuver_2'
 title_comp = '360deg_pitch_maneuver_components'
 save = False
@@ -235,4 +235,4 @@ plt.suptitle('Dynamic components for longitudinal model')
 if save:
     plt.savefig(f'results/{title_comp}.png')
     
-plt.show()
+# plt.show()

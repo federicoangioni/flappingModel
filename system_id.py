@@ -16,25 +16,25 @@ c1 = 0.0114
 c2 = -0.0449
 
 
-def load_data(nexp=None):
+def load_data(exps):
     """
-    nexp: list
+    nexp: dict
     """
 
     # Select the experiments to extract
-    data = tuple(mat[f"experiment{experiment}"] for experiment in nexp)
+    data = tuple(mat[f"experiment{experiment}"] for experiment in exps.keys())
 
     dictionary = {
-        f"experiment{experiment}": data[i] for i, experiment in enumerate(nexp)
+        f"experiment{experiment}": data[i] for i, experiment in enumerate(exps.keys())
     }
-
-    for index, exp in enumerate((nexp)):
+    
+    
+    for index, exp in enumerate((exps.keys())):
         # Find the number of runs per experiment
-        nruns = data[index].onboard.rates.TIME_onboard_rates.shape[0]
         temp_data = dictionary[f"experiment{exp}"]
         dictionary[f"experiment{exp}"] = []
 
-        for run in range(nruns):
+        for run in list(list(exps.values())[index]):
             # %% Extract necessary flight data
             # Optitrack time
             time = temp_data.motion_tracking.TIME
@@ -122,8 +122,8 @@ def load_data(nexp=None):
 
             dictionary[f"experiment{exp}"].append(data_run)
 
-    collected_data = {key: [] for key in dictionary[f"experiment{nexp[0]}"][0].keys()}
-    for exp in nexp:
+    collected_data = {key: [] for key in dictionary[f"experiment{list(exps.keys())[0]}"][0].keys()}
+    for exp in exps.keys():
         for run in range(len(dictionary[f"experiment{exp}"])):
             curr_data = dictionary[f"experiment{exp}"][run]
             for key in curr_data.keys():
@@ -309,8 +309,9 @@ def plotting(data, k1_x=None, k2_x=None, k1_z=None, k2_z=None):
     plt.tight_layout()
     plt.show()
 
+experiments = {102: range(0, 7), 101:[0], 103:[0], 94:[0], 104:[0]}
 
-experiments = [102, 101, 103, 94, 104]
+# experiments = [102, 101, 103, 94, 104]
 data = load_data(experiments)
 
 k1_x, k2_x = accz_regression(data, v=True)
