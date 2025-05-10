@@ -18,9 +18,16 @@ m = 29.4e-3
 lw = 81e-3
 bz = 9.16e-4
 
+# %% Results from regression 
+"""
+bx  = 0.0117566873, lw*bx = 0.0004477426
+bz  = 0.0010171981, lw * bz = 0.00733434
+
+"""
+
 # %% Extract data from mat files
-Nexp=2
-nman=0
+Nexp=101
+nman=4
 title_main = '360deg_pitch_maneuver_2'
 title_comp = '360deg_pitch_maneuver_components'
 save = False
