@@ -15,7 +15,7 @@ lw = 81e-3
 # %% Load .mat file
 # Sideways data: 95, 100, 99, 98 for roll angle of: (15, 30, 45, 60)
 angle = {95: 15, 100: 30, 99: 45, 98: 60}
-Nexp = 95
+Nexp = 98
 nman = 0
 title_main = f"lateral maneuvre{angle[Nexp]}"
 title_comp = f"lateral_maneuvre_components_{angle[Nexp]}"
@@ -106,15 +106,19 @@ dt = np.mean(np.diff(time))
 ld = lw * np.sin(dih_corr)
 ldd = np.gradient(ld, time)
 
+
 def T(f):
     return c1 * f + c2
 
+
+fy = np.sin(roll) * g + roll * velz
 
 # %% Plotting forces estimation
 
 fig, axs = plt.subplots(5, 1, figsize=(8, 6))
 
 axs[0].plot(time, accy)
+axs[0].plot(time, fy, linestyle="--", color="black")
 axs[0].set_ylabel(r"$\dot{v}$ [m/$s^2$]")
 axs[0].set_xlim(0.5, 3.5)
 axs[0].set_ylim(-20, 20)
