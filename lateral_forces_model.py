@@ -86,7 +86,7 @@ K = 1.0
 numerator = [K]
 denominator = [tau, 1]
 system = TransferFunction(numerator, denominator)
-t_ff, y_ff, _ = lsim(system, U=CMDRight, T=time)
+t_ff_R, y_ff_R, _ = lsim(system, U=CMDRight, T=time)
 
 # %% Dihedral transfer function
 
@@ -107,7 +107,7 @@ ld = lw * np.sin(dih_corr)
 ldd = np.gradient(ld, time)
 
 def T(f):
-    return 2 * (c1 * f + c2)
+    return c1 * f + c2
 
 
 # %% Plotting forces estimation
@@ -152,7 +152,7 @@ axs[3].spines["right"].set_visible(False)
 axs[3].set_xticklabels([])
 
 axs[4].plot(time, ff, linewidth=1.0, label="Flight data")
-axs[4].plot(t_ff, y_ff, linestyle="--", color="black", label="Simulation")
+axs[4].plot(t_ff_R, y_ff_R, linestyle="--", color="black", label="Simulation")
 axs[4].plot(time, CMDRight, color="darkkhaki", linestyle="--", label="Setpoint")
 axs[4].set_ylabel(r"f [Hz]")
 axs[4].set_xlabel(r"Time [s]")
