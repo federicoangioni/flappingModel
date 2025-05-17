@@ -26,28 +26,32 @@ bz  = 0.0010171981, lw * bz = 0.00733434
 """
 
 # %% Extract data from mat files
-Nexp = 102
-nman = 6
+Nexp = 2
+nman = 0
 title_main = "360deg_pitch_maneuver_2"
 title_comp = "360deg_pitch_maneuver_components"
 save = False
 
 # Figure 15 of Minimal Longitudinal uses experiment2, run 0
-# checked up to 79
-# 4, 13(?), 36 (almost sure), 54, 55(2, 4), 57(1)
 mat = scipy.io.loadmat("dataset_revision.mat", squeeze_me=True, struct_as_record=False)
 
 experiment_key = f"experiment{Nexp}"
 data = mat[experiment_key]
 
 # %% Extract necessary flight data
-# Optitrack time
+
+# Time data
 time = data.motion_tracking.TIME
 time -= time[0]
-thetadd_opti = np.radians(data.motion_tracking.ALPHy[nman])
-thetadd_onboard = data.onboard.rates.ALPHy_IMU_filtered[nman]
 time_onboard_rates = data.onboard.rates.TIME_onboard_rates[nman]
 time_onboard_rates -= time_onboard_rates[0]
+time_onboard = data.onboard.angles_commands_setpoints.TIME_onboard[nman]
+time_onboard -= time_onboard[0]
+
+
+thetadd_opti = np.radians(data.motion_tracking.ALPHy[nman])
+thetadd_onboard = data.onboard.rates.ALPHy_IMU_filtered[nman]
+
 
 # Frequency, both onboard and interpolated + setpoints
 ff = data.onboard_interpolated.FREQright_wing_interp[nman]
@@ -56,15 +60,12 @@ time_freq = data.onboard.frequency.TIME_onboard_freq[nman]
 CMDRight = data.onboard_interpolated.CMDthrottle_interp[nman] / 4.1
 
 # Accelerations
-accx = data.motion_tracking.DVEL_BODYx_filtered[nman]
-accz = data.motion_tracking.DVEL_BODYz_filtered[nman]
-velx = data.motion_tracking.VEL_BODYx_filtered[nman]
-velz = data.motion_tracking.VEL_BODYz_filtered[nman]
+udot = data.motion_tracking.DVEL_BODYx_filtered[nman]
+wdot = data.motion_tracking.DVEL_BODYz_filtered[nman]
+u = data.motion_tracking.VEL_BODYx_filtered[nman]
+w = data.motion_tracking.VEL_BODYz_filtered[nman]
 
-# Onboard time
-time_onboard = data.onboard.angles_commands_setpoints.TIME_onboard[nman]
-# ff = np.mean(data.onboard.frequency.FREQright_wing[nman])
-time_onboard -= time_onboard[0]
+
 # Dihedral commands and response
 dihedral = data.motion_tracking.DIHEDRAL[nman]
 CMD_dihed = np.radians(data.onboard_interpolated.CMDpitch_interp[nman] / 100 * 18)
@@ -75,21 +76,14 @@ pitch = interp1d(time_onboard, pitch_raw, fill_value="extrapolate")(time)
 omy_raw = np.radians(data.onboard.rates.OMy_IMU_filtered[nman])
 omy = interp1d(time_onboard_rates, omy_raw, fill_value="extrapolate")(time)
 
-# Secondary inputs
-# pitch = np.radians(data.motion_tracking.PITCH[nman])
-# omy = np.radians(data.motion_tracking.OMy_filtered[nman])
-# plt.plot(time, omy)
-# plt.plot(time, omy_onboard)
-# plt.show()
-
 # %% Butterworth filter
 fs = 1 / np.mean(np.diff(time))
 fc = 5
 order = 4
 
 b, a = butter(order, fc / (fs / 2))
-accz = filtfilt(b, a, accz)
-accx = filtfilt(b, a, accx)
+wdot = filtfilt(b, a, wdot)
+udot = filtfilt(b, a, udot)
 thetadd_onboard = filtfilt(b, a, thetadd_onboard)
 thetadd_opti = filtfilt(b, a, thetadd_opti)
 
@@ -111,7 +105,7 @@ system = TransferFunction(numerator, denominator)
 t_dih, y_dih, _ = lsim(system, U=CMD_dihed, T=time)
 
 # correction on dihedral due to velocity
-dih_corr = -c_corr * velx + y_dih
+dih_corr = -c_corr * u + y_dih
 
 # %% Force modeling
 dt = np.mean(np.diff(time))
@@ -123,11 +117,11 @@ def T(f):
     return 2 * (c1 * f + c2)
 
 
-fx = -np.sin(pitch) * g - y_ff * bx / m * (velx - lz * omy + ldd) - omy * velz
-fz = np.cos(pitch) * g - y_ff * bz / m * (velz - ld * omy) + omy * velx - T(y_ff) / m
+fx = -np.sin(pitch) * g - y_ff * bx / m * (u - lz * omy + ldd) - omy * w
+fz = np.cos(pitch) * g - y_ff * bz / m * (w - ld * omy) + omy * u - T(y_ff) / m
 my = (
-    -bx * y_ff * lz * (velx - lz * omy + ldd)
-    + bz * y_ff * ld * (velz - ld * omy)
+    -bx * y_ff * lz * (u - lz * omy + ldd)
+    + bz * y_ff * ld * (w - ld * omy)
     - T(y_ff) * ld
 ) / Iyy
 
@@ -135,7 +129,7 @@ my = (
 
 fig, axs = plt.subplots(5, 1, figsize=(8, 6))
 
-axs[0].plot(time, accx)
+axs[0].plot(time, udot)
 axs[0].plot(time, fx, linestyle="--", color="black")
 axs[0].set_ylabel(r"$\dot{u}$ [m/$s^2$]")
 axs[0].set_xlim(0.5, 3.5)
@@ -144,7 +138,7 @@ axs[0].spines["top"].set_visible(False)
 axs[0].spines["right"].set_visible(False)
 axs[0].set_xticklabels([])
 
-axs[1].plot(time, accz)
+axs[1].plot(time, wdot)
 axs[1].plot(time, fz, linestyle="--", color="black")
 axs[1].set_xlim(0.5, 3.5)
 axs[1].set_ylim(-10, 35)
@@ -197,14 +191,14 @@ if save:
 
 fig, axs = plt.subplots(3, 2, figsize=(12, 4))
 
-axs[0, 0].plot(time, velx, linewidth=1.0, label="Flight data")
+axs[0, 0].plot(time, u, linewidth=1.0, label="Flight data")
 axs[0, 0].set_ylabel(r"u [m/s]")
 axs[0, 0].set_xlim(0.5, 3.5)
 axs[0, 0].spines["top"].set_visible(False)
 axs[0, 0].spines["right"].set_visible(False)
 axs[0, 0].set_xticklabels([])
 
-axs[0, 1].plot(time, velz, linewidth=1.0, label="Flight data")
+axs[0, 1].plot(time, w, linewidth=1.0, label="Flight data")
 axs[0, 1].set_ylabel(r"w [m/s]")
 axs[0, 1].set_xlim(0.5, 3.5)
 axs[0, 1].spines["top"].set_visible(False)
