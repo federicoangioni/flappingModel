@@ -17,7 +17,7 @@ s2 = 3.9517 * bat_corr
 m = 29.85e-3
 act_w0 = 40  # rad/s
 act_damp = 0.634  # -
-
+lz = 27e-3
 # %% Load .mat file
 angle = {95: 15, 100: 30, 99: 45, 98: 60, 4: np.nan}
 Nexp = 4
@@ -114,7 +114,12 @@ def T(f):
 
 
 fy = np.sin(phi) * g + phi * w + 0.014 / m * (fL_out - fR_out) * (v)
-fz =  - (T(fL_out) + T(fR_out)) / m + np.cos(phi) * g - 0.01 * (fL_out + fR_out) * w
+fz = (
+    np.cos(phi) * g
+    - phi * v
+    - (T(fL_out) + T(fR_out)) / m
+    + 1 * (fR_out - fL_out) * (w)
+)
 
 # %% Plotting forces estimation
 if plot:
