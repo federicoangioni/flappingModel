@@ -1,9 +1,8 @@
 import numpy as np
 import scipy
-from scipy.signal import butter, filtfilt, tf2ss, StateSpace
+from scipy.signal import butter, filtfilt, tf2ss, StateSpace, TransferFunction, lsim
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
-from scipy.signal import TransferFunction, lsim
 
 # %% Define constants
 g = 9.81
@@ -15,13 +14,12 @@ c2 = -0.03925  # c2 = -0.0449
 s1 = 0.2014
 bat_corr = 0.8
 s2 = 3.9517 * bat_corr
-m = m = 29.85e-3
+m = 29.85e-3
 act_w0 = 40  # rad/s
 act_damp = 0.634  # -
 
 # %% Load .mat file
-# Sideways data: 95, 100, 99, 98 for roll angle of: (15, 30, 45, 60), 4 run 1 important
-angle = {95: 15, 100: 30, 99: 45, 98: 60, 4: 15}
+angle = {95: 15, 100: 30, 99: 45, 98: 60, 4: np.nan}
 Nexp = 4
 nman = 1
 title_main = f"lateral maneuvre{angle[Nexp]}"
@@ -66,6 +64,7 @@ phid_raw = np.radians(data.onboard.rates.OMx_IMU_filtered[nman])
 # Dihedral
 dihedral = data.motion_tracking.DIHEDRAL[nman]
 
+# --------------------------------------------------------------------------------
 # %% Butterworth filter
 fs = 1 / np.mean(np.diff(time))
 fc = 20
@@ -115,7 +114,7 @@ def T(f):
 
 
 fy = np.sin(phi) * g + phi * w + 0.014 / m * (fL_out - fR_out) * (v)
-fz = (T(fL_out) + T(fR_out)) / m
+fz =  - (T(fL_out) + T(fR_out)) / m + np.cos(phi) * g - 0.01 * (fL_out + fR_out) * w
 
 # %% Plotting forces estimation
 if plot:
