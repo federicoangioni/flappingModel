@@ -128,7 +128,11 @@ fz = (
     - 0.5 * (fL_out - fR_out) * (w)
 )
 
-mx =  ((T(fL_out) - T(fR_out)) * lw - 0 * 0.015 * lz * (fL_out - fR_out) * (v)) / Ixx
+mx = (
+    (T(fL_out) - T(fR_out)) * lw
+    - 0.0143 * lw * (fL_out - fR_out) * (w)
+    + 0.015 * (fL_out - fR_out) * v * ld
+) / Ixx
 
 # %% Plotting forces estimation
 if plot:
