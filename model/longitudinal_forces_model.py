@@ -4,7 +4,7 @@ from scipy.signal import butter, filtfilt
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from scipy.signal import TransferFunction, lsim
-
+import os 
 # %% Define constants
 g = 9.81
 c1 = 0.0114
@@ -33,7 +33,7 @@ title_comp = "360deg_pitch_maneuver_components"
 save = False
 
 # Figure 15 of Minimal Longitudinal uses experiment2, run 0
-mat = scipy.io.loadmat("dataset_revision.mat", squeeze_me=True, struct_as_record=False)
+mat = scipy.io.loadmat("../data/dataset_revision.mat", squeeze_me=True, struct_as_record=False)
 
 experiment_key = f"experiment{Nexp}"
 data = mat[experiment_key]

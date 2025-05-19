@@ -3,6 +3,7 @@ import scipy
 from scipy.signal import butter, filtfilt, tf2ss, StateSpace, TransferFunction, lsim
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+import os
 
 # %% Define constants
 g = 9.81
@@ -18,6 +19,8 @@ m = 29.85e-3
 act_w0 = 40  # rad/s
 act_damp = 0.634  # -
 lz = 27e-3
+Ixx = 1.02e-4
+
 # %% Load .mat file
 angle = {95: 15, 100: 30, 99: 45, 98: 60, 4: np.nan}
 Nexp = 4
@@ -27,7 +30,11 @@ title_comp = f"lateral_maneuvre_components_{angle[Nexp]}"
 save = False
 plot = True
 
-mat = scipy.io.loadmat("dataset_revision.mat", squeeze_me=True, struct_as_record=False)
+mat = scipy.io.loadmat(
+    os.path.join(os.path.dirname(__file__), "..", "data", "dataset_revision.mat"),
+    squeeze_me=True,
+    struct_as_record=False,
+)
 
 experiment_key = f"experiment{Nexp}"
 data = mat[experiment_key]
@@ -113,13 +120,15 @@ def T(f):
     return c1 * f + c2
 
 
-fy = np.sin(phi) * g + phi * w + 0.014 / m * (fL_out - fR_out) * (v)
+fy = np.sin(phi) * g - phid * w + 0.015 / m * (fL_out - fR_out) * (v)
 fz = (
     np.cos(phi) * g
-    - phi * v
+    - phid * v
     - (T(fL_out) + T(fR_out)) / m
-    + 1 * (fR_out - fL_out) * (w)
+    - 0.5 * (fL_out - fR_out) * (w)
 )
+
+mx =  ((T(fL_out) - T(fR_out)) * lw - 0 * 0.015 * lz * (fL_out - fR_out) * (v)) / Ixx
 
 # %% Plotting forces estimation
 if plot:
@@ -144,6 +153,7 @@ if plot:
     axs[1].set_xticklabels([])
 
     axs[2].plot(time_onboard_rates, phidd)
+    axs[2].plot(time, mx, linestyle="--", color="black")
     axs[2].set_ylabel(r"$\ddot{\phi}$ [rad/s$^2$]")
     axs[2].set_xlim(0.5, 3.5)
     # axs[2].set_ylim(-100, 100)
