@@ -20,6 +20,9 @@ act_w0 = 40  # rad/s
 act_damp = 0.634  # -
 lz = 27e-3
 Ixx = 1.02e-4
+by = 0.015
+
+
 
 # %% Load .mat file
 angle = {95: 15, 100: 30, 99: 45, 98: 60, 4: np.nan}
@@ -120,18 +123,18 @@ def T(f):
     return c1 * f + c2
 
 
-fy = np.sin(phi) * g - phid * w + 0.015 / m * (fL_out - fR_out) * (v)
+fy = np.sin(phi) * g - phid * w + by / m * (fL_out - fR_out) * (v + phid * lz)
 fz = (
     np.cos(phi) * g
     - phid * v
     - (T(fL_out) + T(fR_out)) / m
-    - 0.5 * (fL_out - fR_out) * (w)
+    - 0.0135 / m * (fL_out - fR_out) * (w + lw * phid)
 )
 
 mx = (
     (T(fL_out) - T(fR_out)) * lw
-    - 0.0143 * lw * (fL_out - fR_out) * (w)
-    + 0.015 * (fL_out - fR_out) * v * ld
+    - 0.0143 * lw * (fL_out - fR_out) * (w + phid * lz)
+    + by * (fL_out - fR_out) * (v + lw * phi) * lz
 ) / Ixx
 
 # %% Plotting forces estimation
@@ -174,6 +177,7 @@ if plot:
     )
     axs[3].set_ylabel(r"$\gamma_2 [deg]$")
     axs[3].set_xlim(0.5, 3.5)
+    axs[3].set_ylim(-20, 20)
     axs[3].spines["top"].set_visible(False)
     axs[3].spines["right"].set_visible(False)
     axs[3].set_xticklabels([])
@@ -183,9 +187,9 @@ if plot:
     axs[4].plot(time, fL_out, linestyle="--", color="blue", label=r"Simulation $f_L$")
     axs[4].set_ylabel(r"$ff$ [Hz]")
     axs[4].set_xlim(0.5, 3.5)
-    axs[3].spines["top"].set_visible(False)
-    axs[3].spines["right"].set_visible(False)
-    axs[3].set_xticklabels([])
+    axs[4].spines["top"].set_visible(False)
+    axs[4].spines["right"].set_visible(False)
+    axs[4].set_xticklabels([])
     axs[4].legend(fontsize=8)
 
     axs[5].plot(time, CMDRight, color="darkkhaki", linestyle="--", label="Setpoint")

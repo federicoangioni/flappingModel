@@ -18,13 +18,16 @@ m = 29.4e-3
 lw = 81e-3
 bz = 9.16e-4
 
+bx_lw = bx * lw
+bz_lw = bz * lw
 # %% Results from regression
 """
-bx  = 0.0117566873, lw*bx = 0.0004477426
-bz  = 0.0010171981, lw * bz = 0.00733434
+bx  = 0.0117566873
+bx_lw = 0.0004477426
+bz  = 0.0010171981
+lw_bz = 0.00733434
 
 """
-
 # %% Extract data from mat files
 Nexp = 2
 nman = 0
@@ -33,7 +36,7 @@ title_comp = "360deg_pitch_maneuver_components"
 save = False
 
 # Figure 15 of Minimal Longitudinal uses experiment2, run 0
-mat = scipy.io.loadmat("../data/dataset_revision.mat", squeeze_me=True, struct_as_record=False)
+mat = scipy.io.loadmat(os.path.join(os.path.dirname(__file__), "..", "data", "dataset_revision.mat"), squeeze_me=True, struct_as_record=False)
 
 experiment_key = f"experiment{Nexp}"
 data = mat[experiment_key]
@@ -109,20 +112,20 @@ dih_corr = -c_corr * u + y_dih
 
 # %% Force modeling
 dt = np.mean(np.diff(time))
-ld = lw * np.sin(dih_corr)
-ldd = np.gradient(ld, time)
+ld = np.sin(dih_corr) 
+ldd = np.gradient(ld, time) 
 
 
 def T(f):
     return 2 * (c1 * f + c2)
 
 
-fx = -np.sin(pitch) * g - y_ff * bx / m * (u - lz * omy + ldd) - omy * w
-fz = np.cos(pitch) * g - y_ff * bz / m * (w - ld * omy) + omy * u - T(y_ff) / m
+fx = -np.sin(pitch) * g - y_ff * bx / m * (u - lz * omy) - y_ff * bx_lw / m * ldd - omy * w
+fz = np.cos(pitch) * g - y_ff * bz / m * (w ) + y_ff * bz_lw / m * (ld * omy)   + omy * u - T(y_ff) / m
 my = (
-    -bx * y_ff * lz * (u - lz * omy + ldd)
-    + bz * y_ff * ld * (w - ld * omy)
-    - T(y_ff) * ld
+    -bx * y_ff * lz * (u - lz * omy) - bx_lw * y_ff * lz * ldd 
+    + bz * y_ff * ld *lw * (w ) - bz_lw * y_ff * ld *lw * ld * omy
+    - T(y_ff) * ld * lw
 ) / Iyy
 
 # %% Plotting forces estimation
