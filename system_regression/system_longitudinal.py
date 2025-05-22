@@ -3,8 +3,9 @@ import numpy as np
 from scipy.interpolate import interp1d
 from scipy.signal import butter, filtfilt
 from scipy.signal import TransferFunction, lsim
+import os
 
-mat = sp.io.loadmat("dataset_revision.mat", squeeze_me=True, struct_as_record=False)
+mat = sp.io.loadmat(os.path.join(os.path.dirname(__file__), "..", "data", "dataset_revision.mat"), squeeze_me=True, struct_as_record=False)
 
 # Constants
 c_corr = 0.175

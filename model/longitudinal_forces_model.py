@@ -119,9 +119,11 @@ ldd = np.gradient(ld, time)
 def T(f):
     return 2 * (c1 * f + c2)
 
-
-fx = -np.sin(pitch) * g - y_ff * bx / m * (u - lz * omy) - y_ff * bx_lw / m * ldd - omy * w
-fz = np.cos(pitch) * g - y_ff * bz / m * (w ) + y_ff * bz_lw / m * (ld * omy)   + omy * u - T(y_ff) / m
+f0 = (m * g / 2 - c2) / c1
+print(f0)
+print(f0 - y_ff)
+fx = -np.sin(pitch) * g - (2*f0 + y_ff)/3 * bx / m * (u - lz * omy) - (2*f0 + y_ff)/3 * bx_lw / m * ldd - omy * w
+fz = np.cos(pitch) * g - (8*f0 + y_ff)/3 * bz / m * (w )*0 + 0*(2*f0 + y_ff)/3 * bz_lw / m * (ld * omy)   + omy * u - T(y_ff) / m
 my = (
     -bx * y_ff * lz * (u - lz * omy) - bx_lw * y_ff * lz * ldd 
     + bz * y_ff * ld *lw * (w ) - bz_lw * y_ff * ld *lw * ld * omy
@@ -182,7 +184,7 @@ axs[4].set_ylim(5.0, 27)
 axs[4].spines["top"].set_visible(False)
 axs[4].spines["right"].set_visible(False)
 axs[4].legend(loc="upper left", bbox_to_anchor=(0.2, 0.8), fontsize=8)
-
+axs[4].plot(time, )
 fig.align_ylabels(axs[:])
 plt.tight_layout()
 
