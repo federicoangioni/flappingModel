@@ -20,17 +20,17 @@ act_w0 = 40  # rad/s
 act_damp = 0.634  # -
 lz = 27e-3
 Ixx = 1.02e-4
-by = 0.015
+by = 0.00015
 
 
 
 # %% Load .mat file
-angle = {95: 15, 100: 30, 99: 45, 98: 60, 4: np.nan}
+angle = {95: 15, 100: 30, 99: 45, 98: 60, 4: 404}
 Nexp = 4
 nman = 1
 title_main = f"lateral maneuvre{angle[Nexp]}"
 title_comp = f"lateral_maneuvre_components_{angle[Nexp]}"
-save = False
+save = True
 plot = True
 
 mat = scipy.io.loadmat(
@@ -123,12 +123,12 @@ def T(f):
     return c1 * f + c2
 
 
-fy = np.sin(phi) * g - phid * w + by / m * (fL_out - fR_out) * (v + phid * lz)
+fy = np.sin(phi) * g - phid * w + by / m * (fL_out + fR_out)/2 * (v + phid * lz)
 fz = (
     np.cos(phi) * g
     - phid * v
     - (T(fL_out) + T(fR_out)) / m
-    - 0.0135 / m * (fL_out - fR_out) * (w + lw * phid)
+    - 0.0035 / m * (fL_out + fR_out)/2 * (w + lw * phid)
 )
 
 mx = (
